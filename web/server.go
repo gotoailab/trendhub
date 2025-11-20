@@ -70,7 +70,7 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		
+
 		// 尝试解析为 JSON 返回给前端方便生成表单
 		var cfg config.Config
 		if err := yaml.Unmarshal(content, &cfg); err == nil {
@@ -238,7 +238,6 @@ func (s *Server) handleRecentHistory(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-
 func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -273,7 +272,7 @@ func (s *Server) handlePushRecords(w http.ResponseWriter, r *http.Request) {
 	// 获取分页参数
 	limit := 20
 	offset := 0
-	
+
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
 		fmt.Sscanf(limitStr, "%d", &limit)
 	}

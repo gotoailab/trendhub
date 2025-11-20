@@ -156,7 +156,7 @@ func LoadConfig(configPath string, keywordPath string) (*GlobalConfig, error) {
 }
 
 func loadKeywords(path string) ([]KeywordGroup, []string, error) {
-	content, err := ioutil.ReadFile(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -227,7 +227,7 @@ func GetCurrentVersion() (string, error) {
 	// 尝试从 version 文件读取
 	versionPath := "version"
 	if _, err := os.Stat(versionPath); err == nil {
-		data, err := ioutil.ReadFile(versionPath)
+		data, err := os.ReadFile(versionPath)
 		if err == nil {
 			version := strings.TrimSpace(string(data))
 			if version != "" {
@@ -237,7 +237,7 @@ func GetCurrentVersion() (string, error) {
 	}
 
 	// 如果文件不存在或读取失败，返回默认版本
-	return "1.0.0", nil
+	return "0.0.1", nil
 }
 
 // FetchLatestVersion 从远程URL获取最新版本号
@@ -275,8 +275,9 @@ func FetchLatestVersion(versionCheckURL string) (string, error) {
 
 // CompareVersions 比较两个版本号，返回：
 // -1: v1 < v2
-//  0: v1 == v2
-//  1: v1 > v2
+//
+//	0: v1 == v2
+//	1: v1 > v2
 func CompareVersions(v1, v2 string) (int, error) {
 	parts1 := strings.Split(strings.TrimPrefix(v1, "v"), ".")
 	parts2 := strings.Split(strings.TrimPrefix(v2, "v"), ".")
