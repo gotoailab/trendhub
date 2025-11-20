@@ -241,6 +241,13 @@ func (tr *TaskRunner) Run() (string, error) {
 		}
 		logger.Printf("Crawled data from %d platforms", len(data))
 
+		// 保存原始爬取数据到历史记录
+		if tr.DataCache != nil {
+			if err := tr.DataCache.SaveCrawlHistory(data); err != nil {
+				logger.Printf("Warning: Failed to save crawl history: %v", err)
+			}
+		}
+
 		// 过滤出未推送的内容
 		rawData = make(map[string][]*model.NewsItem)
 		totalItems := 0
@@ -268,6 +275,14 @@ func (tr *TaskRunner) Run() (string, error) {
 			return tr.LastLog, err
 		}
 		logger.Printf("Crawled data from %d platforms", len(data))
+
+		// 保存原始爬取数据到历史记录
+		if tr.DataCache != nil {
+			if err := tr.DataCache.SaveCrawlHistory(data); err != nil {
+				logger.Printf("Warning: Failed to save crawl history: %v", err)
+			}
+		}
+
 		rawData = data
 	}
 

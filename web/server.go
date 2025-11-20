@@ -23,9 +23,11 @@ func NewServer(runner *TaskRunner) *Server {
 func (s *Server) Run(addr string) error {
 	http.HandleFunc("/api/config", s.enableCors(s.handleConfig))
 	http.HandleFunc("/api/keywords", s.enableCors(s.handleKeywords))
-	http.HandleFunc("/api/status", s.enableCors(s.handleStatus))
 	http.HandleFunc("/api/run", s.enableCors(s.handleRun))
 	http.HandleFunc("/api/push-records", s.enableCors(s.handlePushRecords))
+	http.HandleFunc("/api/crawl-history", s.enableCors(s.handleCrawlHistory))
+	http.HandleFunc("/api/crawl-history/recent", s.enableCors(s.handleRecentHistory))
+	http.HandleFunc("/api/current-data", s.enableCors(s.handleCurrentData))
 
 	// 静态文件服务
 	// 假设 web/static 在运行目录的相对路径下
@@ -149,16 +151,89 @@ func (s *Server) handleKeywords(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
-	s.Runner.mu.Lock()
-	defer s.Runner.mu.Unlock()
-
-	status := map[string]interface{}{
-		"isRunning":   s.Runner.IsRunning,
-		"lastRunTime": s.Runner.LastRunTime.Format(time.RFC3339),
-		"lastLog":     s.Runner.LastLog,
+// handleCrawlHistory 获取指定日期的爬取历史数据
+func (s *Server) handleCrawlHistory(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
-	json.NewEncoder(w).Encode(status)
+
+	if s.Runner.DataCache == nil {
+		http.Error(w, "Data cache not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	date := r.URL.Query().Get("date")
+	if date == "" {
+		// 默认返回今天的数据
+		date = time.Now().Format("2006-01-02")
+	}
+
+	history, err := s.Runner.DataCache.GetCrawlHistory(date)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get history for %s: %v", date, err), http.StatusNotFound)
+		return
+	}
+
+	json.NewEncoder(w).Encode(history)
+}
+
+// handleRecentHistory 获取最近7天的抓取历史摘要
+func (s *Server) handleRecentHistory(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if s.Runner.DataCache == nil {
+		http.Error(w, "Data cache not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	days := 7
+	if daysStr := r.URL.Query().Get("days"); daysStr != "" {
+		fmt.Sscanf(daysStr, "%d", &days)
+	}
+
+	histories, err := s.Runner.DataCache.GetRecentCrawlHistory(days)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get recent history: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"histories": histories,
+		"total":     len(histories),
+	})
+}
+
+// handleCurrentData 获取当天的实时数据
+func (s *Server) handleCurrentData(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if s.Runner.DataCache == nil {
+		http.Error(w, "Data cache not initialized", http.StatusInternalServerError)
+		return
+	}
+
+	// 尝试从今天的历史记录中获取
+	today := time.Now().Format("2006-01-02")
+	history, err := s.Runner.DataCache.GetCrawlHistory(today)
+	if err != nil {
+		// 如果没有今天的历史记录，返回空数据
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"date":       today,
+			"timestamp":  time.Now(),
+			"data":       map[string]interface{}{},
+			"item_count": 0,
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(history)
 }
 
 func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {

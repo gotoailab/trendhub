@@ -184,6 +184,11 @@ func (dc *DailyCollector) collect(ctx context.Context) {
 		return
 	}
 
+	// 保存到历史记录（覆盖今天的记录，保持最新）
+	if err := dc.cache.SaveCrawlHistory(data); err != nil {
+		log.Printf("Warning: Failed to save crawl history: %v", err)
+	}
+
 	// 添加到缓存（自动去重）
 	totalAdded := 0
 	for _, items := range data {

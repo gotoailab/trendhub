@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 const (
 	dailyBucket       = "daily_cache"
 	incrementalBucket = "incremental_pushed"
+	historyBucket     = "crawl_history" // 存储每天的抓取历史
 )
 
 // DataCache 数据缓存管理器
@@ -39,6 +41,9 @@ func NewDataCache(dbPath string) (*DataCache, error) {
 			return err
 		}
 		if _, err := tx.CreateBucketIfNotExists([]byte(incrementalBucket)); err != nil {
+			return err
+		}
+		if _, err := tx.CreateBucketIfNotExists([]byte(historyBucket)); err != nil {
 			return err
 		}
 		return nil
@@ -250,5 +255,152 @@ func isSameDay(t1, t2 time.Time) bool {
 	y1, m1, d1 := t1.Date()
 	y2, m2, d2 := t2.Date()
 	return y1 == y2 && m1 == m2 && d1 == d2
+}
+
+// CrawlHistoryRecord 抓取历史记录
+type CrawlHistoryRecord struct {
+	Date      string                       `json:"date"`       // YYYY-MM-DD
+	Timestamp time.Time                    `json:"timestamp"`  // 抓取时间
+	Data      map[string][]*model.NewsItem `json:"data"`       // 按平台分组的数据
+	ItemCount int                          `json:"item_count"` // 总条目数
+}
+
+// SaveCrawlHistory 保存抓取历史
+func (dc *DataCache) SaveCrawlHistory(data map[string][]*model.NewsItem) error {
+	date := time.Now().Format("2006-01-02")
+	
+	// 计算总条目数
+	totalItems := 0
+	for _, items := range data {
+		totalItems += len(items)
+	}
+
+	record := CrawlHistoryRecord{
+		Date:      date,
+		Timestamp: time.Now(),
+		Data:      data,
+		ItemCount: totalItems,
+	}
+
+	return dc.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(historyBucket))
+		if b == nil {
+			return fmt.Errorf("bucket %s not found", historyBucket)
+		}
+
+		// 使用日期作为key
+		key := []byte(date)
+		
+		jsonData, err := json.Marshal(record)
+		if err != nil {
+			return fmt.Errorf("failed to marshal history: %w", err)
+		}
+
+		return b.Put(key, jsonData)
+	})
+}
+
+// GetCrawlHistory 获取指定日期的抓取历史
+func (dc *DataCache) GetCrawlHistory(date string) (*CrawlHistoryRecord, error) {
+	var record CrawlHistoryRecord
+
+	err := dc.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(historyBucket))
+		if b == nil {
+			return fmt.Errorf("bucket %s not found", historyBucket)
+		}
+
+		data := b.Get([]byte(date))
+		if data == nil {
+			return fmt.Errorf("no history found for date %s", date)
+		}
+
+		return json.Unmarshal(data, &record)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &record, nil
+}
+
+// GetRecentCrawlHistory 获取最近N天的抓取历史列表（仅摘要）
+func (dc *DataCache) GetRecentCrawlHistory(days int) ([]map[string]interface{}, error) {
+	var histories []map[string]interface{}
+
+	err := dc.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(historyBucket))
+		if b == nil {
+			return nil
+		}
+
+		c := b.Cursor()
+
+		// 从最新的开始倒序遍历
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			if len(histories) >= days {
+				break
+			}
+
+			var record CrawlHistoryRecord
+			if err := json.Unmarshal(v, &record); err != nil {
+				log.Printf("Error unmarshalling history %s: %v", string(k), err)
+				continue
+			}
+
+			// 只返回摘要信息，不包含完整数据
+			summary := map[string]interface{}{
+				"date":       record.Date,
+				"timestamp":  record.Timestamp,
+				"item_count": record.ItemCount,
+			}
+
+			// 统计各平台数量
+			platformCounts := make(map[string]int)
+			for platform, items := range record.Data {
+				platformCounts[platform] = len(items)
+			}
+			summary["platforms"] = platformCounts
+
+			histories = append(histories, summary)
+		}
+
+		return nil
+	})
+
+	return histories, err
+}
+
+// CleanOldHistory 清理N天前的历史记录
+func (dc *DataCache) CleanOldHistory(retentionDays int) (int, error) {
+	if retentionDays <= 0 {
+		return 0, nil
+	}
+
+	threshold := time.Now().AddDate(0, 0, -retentionDays).Format("2006-01-02")
+	deleted := 0
+
+	err := dc.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(historyBucket))
+		if b == nil {
+			return nil
+		}
+
+		c := b.Cursor()
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			dateStr := string(k)
+			if dateStr < threshold {
+				if err := b.Delete(k); err != nil {
+					return err
+				}
+				deleted++
+			}
+		}
+
+		return nil
+	})
+
+	return deleted, err
 }
 

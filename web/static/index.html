@@ -454,14 +454,14 @@
             
             <!-- 标签导航 -->
             <div class="tabs">
-                <button class="tab-item" :class="{active: currentTab === 'dashboard'}" @click="currentTab = 'dashboard'">
+                <button class="tab-item" :class="{active: currentTab === 'history'}" @click="currentTab = 'history'; fetchRecentHistory()">
                     <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6">
                         </path>
                     </svg>
-                    仪表盘
+                    Trending
                 </button>
                 <button class="tab-item" :class="{active: currentTab === 'config'}" @click="currentTab = 'config'">
                     <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
@@ -502,65 +502,112 @@
                     推送记录
                 </button>
                 </div>
-<!-- 仪表盘 -->
-<div v-show="currentTab === 'dashboard'" style="display: grid; gap: 1.5rem;">
-    <!-- 快速操作 -->
+<!-- 历史数据 -->
+<div v-show="currentTab === 'history'" style="display: grid; gap: 1.5rem;">
     <div class="card">
-        <div class="card-header">
-            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">快速操作</h2>
-                    </div>
-                    <div class="card-body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                        <button @click="runTask" :disabled="status.isRunning" class="btn btn-primary" style="height: 4rem;">
-                            <svg v-if="status.isRunning" class="animate-spin"
-                                style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem;" fill="none" viewBox="0 0 24 24">
-                                <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path style="opacity: 0.75;" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">抓取历史数据</h2>
+            <button @click="fetchRecentHistory" class="btn btn-sm btn-secondary">
+                <svg style="width: 1rem; height: 1rem; margin-right: 0.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                刷新
+            </button>
+        </div>
+        <div class="card-body">
+            <!-- 日期选择 -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">选择日期</label>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem;">
+                    <!-- 今日实时 -->
+                    <button @click="selectedDate = 'today'; fetchCurrentData()"
+                        class="btn"
+                        :class="selectedDate === 'today' ? 'btn-primary' : 'btn-secondary'"
+                        style="display: flex; flex-direction: column; align-items: center; padding: 0.75rem; height: auto; position: relative;">
+                        <svg v-if="selectedDate === 'today'" style="position: absolute; top: 0.25rem; right: 0.25rem; width: 0.75rem; height: 0.75rem; color: #10b981;" fill="currentColor" viewBox="0 0 20 20">
+                            <circle cx="10" cy="10" r="3">
+                                <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
+                            </circle>
+                        </svg>
+                        <span style="font-size: 0.875rem; font-weight: 600;">📡 今日实时</span>
+                        <span style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">{{ currentDataCount }} 条</span>
+                    </button>
+                    <!-- 历史日期 -->
+                    <button v-for="hist in recentHistories" :key="hist.date"
+                        @click="selectedDate = hist.date; fetchHistoryDetail(hist.date)"
+                        class="btn"
+                        :class="selectedDate === hist.date ? 'btn-primary' : 'btn-secondary'"
+                        style="display: flex; flex-direction: column; align-items: center; padding: 0.75rem; height: auto;">
+                        <span style="font-size: 0.875rem; font-weight: 600;">{{ hist.date }}</span>
+                        <span style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">{{ hist.item_count }} 条</span>
+                    </button>
+                </div>
+                <div v-if="recentHistories.length === 0" class="empty-state" style="margin-top: 1rem;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    <p>暂无历史数据</p>
+                </div>
+            </div>
+
+            <!-- 数据详情 -->
+            <div v-if="historyDetail && selectedDate" style="border-top: 1px solid #e5e7eb; padding-top: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="font-weight: 600; color: #111827;">
+                        <span v-if="selectedDate === 'today'">📡 今日实时数据</span>
+                        <span v-else>{{ selectedDate }} 抓取数据</span>
+                    </h3>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="color: #6b7280; font-size: 0.875rem;">
+                            共 {{ historyDetail.item_count }} 条 | 
+                            {{ new Date(historyDetail.timestamp).toLocaleString('zh-CN') }}
+                        </span>
+                        <button v-if="selectedDate === 'today'" @click="fetchCurrentData()" class="btn btn-sm btn-secondary">
+                            <svg style="width: 1rem; height: 1rem; margin-right: 0.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
-                            <svg v-else style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem;" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
-                                </path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            {{ status.isRunning ? '正在运行中...' : '立即运行任务' }}
-                        </button>
-                        <button @click="fetchStatus" class="btn btn-secondary" style="height: 4rem;">
-                            <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem;" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                </path>
-                            </svg>
-                            刷新状态
+                            刷新
                         </button>
                     </div>
                 </div>
-
-                <!-- 任务日志 -->
-                <div class="card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">运行日志</h2>
-                        <button @click="clearLog" class="btn btn-sm btn-secondary">清空日志</button>
-                    </div>
-                    <div class="card-body">
-                        <div class="log-container" v-if="status.lastLog">
-                            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">{{ status.lastLog }}</pre>
+                
+                <!-- 按平台分组显示 -->
+                <div style="display: grid; gap: 1.5rem;">
+                    <div v-for="(items, platform) in historyDetail.data" :key="platform" class="card" style="border: 1px solid #e5e7eb;">
+                        <div class="card-header" style="background: #f9fafb;">
+                            <h4 style="font-weight: 600; color: #111827;">
+                                {{ getPlatformName(platform) }}
+                                <span style="color: #6b7280; font-weight: normal; font-size: 0.875rem; margin-left: 0.5rem;">
+                                    ({{ items.length }} 条)
+                                </span>
+                            </h4>
                         </div>
-                        <div v-else class="empty-state">
-                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            <p>暂无日志记录</p>
+                        <div class="card-body">
+                            <div style="display: grid; gap: 0.75rem;">
+                                <div v-for="(item, idx) in items.slice(0, 20)" :key="idx"
+                                    style="display: flex; padding: 0.75rem; border-radius: 0.375rem; background: #f9fafb; hover:background: #f3f4f6; transition: background 0.2s;">
+                                    <span style="font-weight: 600; color: #6b7280; min-width: 2rem;">{{ item.ranks[0] }}.</span>
+                                    <div style="flex: 1;">
+                                        <a v-if="item.url" :href="item.url" target="_blank" 
+                                            style="color: #2563eb; text-decoration: none; hover:text-decoration: underline;">
+                                            {{ item.title }}
+                                        </a>
+                                        <span v-else style="color: #111827;">{{ item.title }}</span>
+                                    </div>
+                                </div>
+                                <div v-if="items.length > 20" style="text-align: center; padding: 0.5rem; color: #6b7280; font-size: 0.875rem;">
+                                    仅显示前20条，共 {{ items.length }} 条数据
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
             <!-- 系统配置 -->
             <div v-show="currentTab === 'config'">
@@ -1243,9 +1290,16 @@
 
         createApp({
             setup() {
-                const currentTab = ref('dashboard')
+                const currentTab = ref('history')
                 const windowWidth = ref(window.innerWidth)
                 const status = ref({ isRunning: false, lastRunTime: '', lastLog: '' })
+                
+                // History State
+                const recentHistories = ref([])
+                const selectedDate = ref('today')
+                const historyDetail = ref(null)
+                const currentDataCount = ref(0)
+                let currentDataTimer = null
                 
                 // Config State
                 const isRawConfig = ref(false)
@@ -1485,6 +1539,76 @@
                     }
                 }
 
+                // 历史数据相关函数
+                const fetchRecentHistory = async () => {
+                    try {
+                        const res = await fetch('/api/crawl-history/recent?days=7')
+                        if (res.ok) {
+                            const data = await res.json()
+                            recentHistories.value = data.histories || []
+                        }
+                    } catch (e) {
+                        console.error('获取历史列表失败:', e)
+                    }
+                }
+
+                const fetchCurrentData = async () => {
+                    try {
+                        const res = await fetch('/api/current-data')
+                        if (res.ok) {
+                            const data = await res.json()
+                            historyDetail.value = data
+                            currentDataCount.value = data.item_count || 0
+                            
+                            // 如果选择的是今日，自动刷新
+                            if (selectedDate.value === 'today') {
+                                if (currentDataTimer) clearTimeout(currentDataTimer)
+                                currentDataTimer = setTimeout(fetchCurrentData, 30000) // 30秒后自动刷新
+                            }
+                        }
+                    } catch (e) {
+                        console.error('获取今日数据失败:', e)
+                    }
+                }
+
+                const fetchHistoryDetail = async (date) => {
+                    // 停止今日数据的自动刷新
+                    if (currentDataTimer) {
+                        clearTimeout(currentDataTimer)
+                        currentDataTimer = null
+                    }
+                    
+                    try {
+                        const res = await fetch(`/api/crawl-history?date=${date}`)
+                        if (res.ok) {
+                            historyDetail.value = await res.json()
+                        } else {
+                            historyDetail.value = null
+                            showToast(`没有 ${date} 的数据`, 'info')
+                        }
+                    } catch (e) {
+                        console.error('获取历史详情失败:', e)
+                        historyDetail.value = null
+                    }
+                }
+
+                const getPlatformName = (platformId) => {
+                    const platformNames = {
+                        'weibo': '微博',
+                        'zhihu': '知乎',
+                        'baidu': '百度',
+                        'toutiao': '今日头条',
+                        'bilibili-hot-search': 'bilibili 热搜',
+                        'douyin': '抖音',
+                        'tieba': '贴吧',
+                        'ifeng': '凤凰网',
+                        'cls-hot': '财联社',
+                        'thepaper': '澎湃新闻',
+                        'wallstreetcn-hot': '华尔街见闻'
+                    }
+                    return platformNames[platformId] || platformId
+                }
+
                 const formatTime = (t) => {
                     if (!t || t.startsWith('0001')) return '从未运行'
                     try {
@@ -1552,6 +1676,8 @@
                 }
 
                 onMounted(() => {
+                    fetchRecentHistory()
+                    fetchCurrentData() // 默认显示今日实时数据
                     fetchStatus()
                     fetchConfig()
                     fetchKeywords()
@@ -1560,6 +1686,7 @@
 
                 onUnmounted(() => {
                     if (pollTimer) clearInterval(pollTimer)
+                    if (currentDataTimer) clearTimeout(currentDataTimer)
                     window.removeEventListener('resize', handleResize)
                 })
 
@@ -1570,9 +1697,11 @@
                     addKeywordGroup, removeKeywordGroup, addWord, removeWord,
                     addPlatform, removePlatform,
                     pushRecords, pushRecordTotal, pushRecordLimit, pushRecordOffset,
+                    recentHistories, selectedDate, historyDetail, currentDataCount,
                     saveConfig, saveKeywords, runTask, clearLog,
                     formatTime, formatDateTime, formatDuration,
                     fetchStatus, fetchPushRecords, prevPushRecordsPage, nextPushRecordsPage,
+                    fetchRecentHistory, fetchHistoryDetail, fetchCurrentData, getPlatformName,
                     showToast
                 }
             }
