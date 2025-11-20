@@ -15,24 +15,59 @@
             overflow-y: scroll;
         }
         
+        /* 深色模式变量 */
+        :root {
+            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --bg-card: white;
+            --bg-card-header: linear-gradient(to right, #f9fafb, #ffffff);
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
+            --border-color: #e5e7eb;
+            --bg-input: #fff;
+            --text-input: #374151;
+            --bg-nav: rgba(255, 255, 255, 0.95);
+            --bg-footer: rgba(255, 255, 255, 0.2);
+            --text-footer: rgba(255, 255, 255, 0.9);
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            --bg-card: #1f2937;
+            --bg-card-header: linear-gradient(to right, #374151, #1f2937);
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --bg-input: #374151;
+            --text-input: #f9fafb;
+            --bg-nav: rgba(31, 41, 55, 0.95);
+            --bg-footer: rgba(0, 0, 0, 0.3);
+            --text-footer: rgba(255, 255, 255, 0.8);
+        }
+        
         body { 
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--bg-primary);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
             min-height: 100vh;
+            color: var(--text-primary);
+            transition: background 0.3s ease;
         }
         
         /* 卡片容器 */
         .card {
-            background: white;
+            background: var(--bg-card);
             border-radius: 1rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             overflow: hidden;
+            transition: background 0.3s ease;
         }
         
         .card-header {
             padding: 1.5rem;
-            border-bottom: 1px solid #e5e7eb;
-            background: linear-gradient(to right, #f9fafb, #ffffff);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-card-header);
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
         
         .card-body {
@@ -46,9 +81,9 @@
             padding: 0.75rem 1rem;
             font-size: 0.875rem;
             line-height: 1.5;
-            color: #374151;
-            background-color: #fff;
-            border: 2px solid #e5e7eb;
+            color: var(--text-input);
+            background-color: var(--bg-input);
+            border: 2px solid var(--border-color);
             border-radius: 0.5rem;
             transition: all 0.2s ease;
         }
@@ -92,7 +127,7 @@
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-primary);
         }
         
         .form-label-required::after {
@@ -130,11 +165,12 @@
         
         /* Section */
         .section {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
             border-radius: 0.75rem;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
+            transition: background 0.3s ease, border-color 0.3s ease;
         }
         
         .section-title {
@@ -142,7 +178,7 @@
             align-items: center;
             font-size: 1rem;
             font-weight: 700;
-            color: #111827;
+            color: var(--text-primary);
             margin-bottom: 1.25rem;
             padding-bottom: 0.75rem;
             border-bottom: 2px solid #667eea;
@@ -180,12 +216,14 @@
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         
         .btn-secondary {
-            background: white;
+            background: var(--bg-card);
             color: #667eea;
             border: 2px solid #667eea;
         }
         
-        .btn-secondary:hover { background: #f3f4f6; }
+        .btn-secondary:hover { 
+            background: var(--bg-input);
+        }
         
         .btn-danger {
             background: #ef4444;
@@ -238,7 +276,7 @@
             padding: 0.75rem 1rem;
             font-size: 0.875rem;
             font-weight: 500;
-            color: #374151;
+            color: var(--text-primary);
             background: transparent;
             border: none;
             cursor: pointer;
@@ -247,12 +285,12 @@
         }
         
         .dropdown-item:hover {
-            background: #f3f4f6;
+            background: var(--bg-input);
             color: #667eea;
         }
         
         .dropdown-item.active {
-            background: #eef2ff;
+            background: rgba(102, 126, 234, 0.1);
             color: #667eea;
             font-weight: 600;
         }
@@ -298,8 +336,8 @@
         
         /* 平台卡片 */
         .platform-card {
-            background: white;
-            border: 2px solid #e5e7eb;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
             border-radius: 0.75rem;
             padding: 1rem;
             transition: all 0.2s;
@@ -366,7 +404,7 @@
         .help-text {
             margin-top: 0.5rem;
             font-size: 0.8125rem;
-            color: #6b7280;
+            color: var(--text-secondary);
         }
         
         /* 动画 */
@@ -382,7 +420,7 @@
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
-            color: #9ca3af;
+            color: var(--text-muted);
         }
         
         .empty-state svg {
@@ -416,12 +454,13 @@
             position: fixed;
             top: 2rem;
             right: 2rem;
-            background: white;
+            background: var(--bg-card);
             padding: 1rem 1.5rem;
             border-radius: 0.5rem;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
             z-index: 9999;
             animation: slideIn 0.3s ease;
+            transition: background 0.3s ease;
         }
         
         @keyframes slideIn {
@@ -434,7 +473,7 @@
     <div id="app">
         <!-- 顶部导航栏 -->
         <nav
-            style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            :style="{background: isDarkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'}">
             <div style="max-width: 1400px; margin: 0 auto; padding: 1rem 2rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 2rem;">
                     <!-- Logo和标题 -->
@@ -448,11 +487,11 @@
                             <h1
                                 style="font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">
                                 TrendHub</h1>
-                            <p style="font-size: 0.75rem; color: #6b7280;">热点趋势监控管理平台</p>
+                            <p :style="{fontSize: '0.75rem', color: isDarkMode ? '#d1d5db' : '#6b7280'}">热点趋势监控管理平台</p>
                         </div>
                     </div>
                     <!-- 标签导航 -->
-                    <div class="tabs" style="flex: 1; justify-content: flex-end; border-bottom: none; margin: 0;">
+                    <div class="tabs" style="flex: 1; justify-content: flex-end; border-bottom: none; margin: 0; align-items: center; gap: 0.5rem;">
                         <button class="tab-item" :class="{active: currentTab === 'history'}" @click="currentTab = 'history'; fetchRecentHistory()">                            
                             首页
                         </button>
@@ -468,7 +507,7 @@
                             <!-- 下拉菜单 -->
                             <div v-show="showSettingsDropdown" 
                                  style="position: absolute; top: 100%; right: 0; padding-top: 0.5rem; background: transparent; z-index: 1000;">
-                                <div style="background: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); min-width: 180px; overflow: hidden;">
+                                <div :style="{background: 'var(--bg-card)', borderRadius: '0.5rem', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)', minWidth: '180px', overflow: 'hidden'}">
                                 <button 
                                     class="dropdown-item" 
                                     :class="{active: currentTab === 'config'}"
@@ -513,6 +552,20 @@
                         <button class="tab-item" :class="{active: currentTab === 'pushrecords'}" @click="currentTab = 'pushrecords'; fetchPushRecords()">
                             推送记录
                         </button>
+                        <!-- 深色模式切换按钮 -->
+                        <button 
+                            @click="toggleDarkMode"
+                            :title="isDarkMode ? '切换到浅色模式' : '切换到深色模式'"
+                            style="width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; border: none; background: var(--bg-input); color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                            @mouseenter="$event.currentTarget.style.background='rgba(102, 126, 234, 0.1)'"
+                            @mouseleave="$event.currentTarget.style.background='var(--bg-input)'">
+                            <svg v-if="!isDarkMode" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                            </svg>
+                            <svg v-else style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -524,13 +577,13 @@
 <div v-show="currentTab === 'history'">
     <!-- 标题栏 -->
     <div
-        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);">
+        :style="{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-card)', borderRadius: '0.5rem', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'}">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <h2 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0;">
+            <h2 :style="{fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0'}">
                 <span v-if="isToday(selectedDate)">📡 今日 Trending</span>
                 <span v-else>{{ selectedDate }} Trending</span>
             </h2>
-            <span v-if="historyDetail" style="color: #6b7280; font-size: 0.875rem;">
+            <span v-if="historyDetail" :style="{color: 'var(--text-secondary)', fontSize: '0.875rem'}">
                 {{ historyDetail.item_count }} 条 · {{ new Date(historyDetail.timestamp).toLocaleString('zh-CN', { hour:
                 '2-digit', minute: '2-digit' }) }}
             </span>
@@ -538,7 +591,7 @@
         <div style="display: flex; align-items: center; gap: 0.75rem;">
             <!-- 日期选择下拉 -->
             <select v-model="selectedDate" @change="fetchHistoryDetail(selectedDate)"
-                style="padding: 0.5rem 2.5rem 0.5rem 1rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; color: #374151; background: white; cursor: pointer; appearance: none; background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22M6 8l4 4 4-4%22/%3E%3C/svg%3E'); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5rem;">
+                :style="selectStyle">
                 <option v-for="date in availableDates" :key="date.value" :value="date.value">
                     {{ date.isToday ? '📡 ' : '' }}{{ date.label }} ({{ date.count }}条)
                 </option>
@@ -559,22 +612,22 @@
     <!-- 内容列表 -->
     <div v-if="historyDetail && historyDetail.items && historyDetail.items.length > 0" style="display: grid; gap: 0.75rem;">
         <div v-for="(item, idx) in historyDetail.items" :key="idx"
-            style="display: flex; gap: 1rem; padding: 1rem 1.25rem; border-radius: 0.5rem; background: white; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); transition: all 0.2s;">
-            <span style="font-weight: 700; color: #2563eb; min-width: 2.5rem; font-size: 1.25rem;">{{ idx + 1 }}</span>
+            :style="{display: 'flex', gap: '1rem', padding: '1rem 1.25rem', borderRadius: '0.5rem', background: 'var(--bg-card)', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', transition: 'all 0.2s'}">
+            <span style="font-weight: 700; color: #667eea; min-width: 2.5rem; font-size: 1.25rem;">{{ idx + 1 }}</span>
             <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.375rem;">
                     <a v-if="item.url" 
                        :href="item.url" 
                        target="_blank" 
                        rel="noopener noreferrer"
-                       style="color: #111827; font-weight: 500; font-size: 1rem; flex: 1; text-decoration: none; transition: color 0.2s;"
+                       :style="{color: 'var(--text-primary)', fontWeight: '500', fontSize: '1rem', flex: '1', textDecoration: 'none', transition: 'color 0.2s'}"
                        @mouseenter="$event.currentTarget.style.color='#667eea'"
-                       @mouseleave="$event.currentTarget.style.color='#111827'">
+                       @mouseleave="$event.currentTarget.style.color='var(--text-primary)'">
                         {{ item.title }}
                     </a>
-                    <span v-else style="color: #111827; font-weight: 500; font-size: 1rem; flex: 1;">{{ item.title }}</span>
+                    <span v-else :style="{color: 'var(--text-primary)', fontWeight: '500', fontSize: '1rem', flex: '1'}">{{ item.title }}</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: #6b7280;">
+                <div :style="{display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-secondary)'}">
                     <span style="background: #e0e7ff; color: #4338ca; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-weight: 500;">
                         {{ getPlatformName(item.source_id) }}
                     </span>
@@ -611,8 +664,8 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">系统配置</h2>
-                            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">管理系统运行参数和通知设置</p>
+                            <h2 :style="{fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)'}">系统配置</h2>
+                            <p :style="{fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}">管理系统运行参数和通知设置</p>
                         </div>
                         <div style="display: flex; gap: 0.75rem;">
                             <button @click="toggleConfigMode" class="btn btn-sm btn-secondary">
@@ -744,9 +797,9 @@
                                     <template v-if="configObj.notification.enable_notification">
                                         <!-- 推送时间窗口 -->
                                         <div class="col-span-12"
-                                            style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
+                                            style="background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
                                             <h4
-                                                style="font-size: 0.9375rem; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                                                style="font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; display: flex; align-items: center;">
                                                 <svg style="width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; color: #667eea;" fill="none"
                                                     stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -792,9 +845,9 @@
 
                                         <!-- Webhooks -->
                                         <div class="col-span-12"
-                                            style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
+                                            style="background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
                                             <h4
-                                                style="font-size: 0.9375rem; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                                                style="font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; display: flex; align-items: center;">
                                                 <svg style="width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; color: #667eea;" fill="none"
                                                     stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -846,9 +899,9 @@
 
                                                     <!-- 邮件通知 -->
                                                     <div class="col-span-12"
-                                                        style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
+                                                        style="background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
                                                         <h4
-                                                            style="font-size: 0.9375rem; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                                                            style="font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; display: flex; align-items: center;">
                                                             <svg style="width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; color: #667eea;" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -889,9 +942,9 @@
                                                     
                                                     <!-- Ntfy 通知 -->
                                                     <div class="col-span-12"
-                                                        style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
+                                                        style="background: var(--bg-card); border: 2px solid var(--border-color); border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
                                                         <h4
-                                                            style="font-size: 0.9375rem; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                                                            style="font-size: 0.9375rem; font-weight: 600; color: var(--text-primary); margin-bottom: 1rem; display: flex; align-items: center;">
                                                             <svg style="width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; color: #667eea;" fill="none"
                                                                 stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -995,8 +1048,8 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">平台管理</h2>
-                            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">管理要监控的热搜平台</p>
+                            <h2 :style="{fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)'}">平台管理</h2>
+                            <p :style="{fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}">管理要监控的热搜平台</p>
                             </div>
                             <button @click="addPlatform" class="btn btn-sm btn-primary">
                                 <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1011,7 +1064,7 @@
                                     <div v-for="(platform, idx) in configObj.platforms" :key="idx" class="platform-card">
                                         <div style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 0.75rem;">
                                             <div style="flex: 1;">
-                                                <div style="font-weight: 600; color: #111827; margin-bottom: 0.25rem;">{{ platform.name }}</div>
+                                                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem;">{{ platform.name }}</div>
                                                 <div style="font-size: 0.75rem; color: #6b7280; font-family: monospace;">ID: {{ platform.id }}</div>
                                             </div>
                                             <button @click="removePlatform(idx)"
@@ -1049,8 +1102,8 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">关键词配置</h2>
-                            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">设置要监控的关键词组合</p>
+                            <h2 :style="{fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)'}">关键词配置</h2>
+                            <p :style="{fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}">设置要监控的关键词组合</p>
                         </div>
                         <div style="display: flex; gap: 0.75rem;">
                             <button @click="toggleKeywordMode" class="btn btn-sm btn-secondary">
@@ -1085,9 +1138,9 @@
                                 <button @click="addKeywordGroup" class="btn btn-sm btn-primary" style="margin-top: 1rem;">添加第一个词组</button>
                             </div>
                             <div v-for="(group, idx) in keywordGroups" :key="idx"
-                                style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem;">
+                                :style="{background: 'var(--bg-card)', border: '2px solid var(--border-color)', borderRadius: '0.75rem', padding: '1.5rem', marginBottom: '1rem'}">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                                    <h3 style="font-size: 1rem; font-weight: 700; color: #111827;">词组 {{ idx + 1 }}</h3>
+                                    <h3 :style="{fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)'}">词组 {{ idx + 1 }}</h3>
                                     <button @click="removeKeywordGroup(idx)" class="btn btn-sm btn-danger">
                                         <svg style="width: 0.875rem; height: 0.875rem; margin-right: 0.375rem;" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -1194,9 +1247,9 @@
             <div v-if="showKeywordRuleModal" 
                  style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 1rem;"
                  @click.self="showKeywordRuleModal = false">
-                <div style="background: white; border-radius: 0.75rem; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);">
-                    <div style="padding: 1.5rem; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
-                        <h2 style="font-size: 1.25rem; font-weight: 700; color: #111827; margin: 0;">关键词规则说明</h2>
+                <div :style="{background: 'var(--bg-card)', borderRadius: '0.75rem', maxWidth: '700px', width: '100%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'}">
+                    <div :style="{padding: '1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}">
+                        <h2 :style="{fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0'}">关键词规则说明</h2>
                         <button @click="showKeywordRuleModal = false"
                                 style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 0.5rem; border-radius: 0.5rem; transition: background 0.2s;"
                                 @mouseenter="$event.currentTarget.style.background='#f3f4f6'"
@@ -1298,8 +1351,8 @@
                 <div class="card">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">推送记录</h2>
-                            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">查看历史推送记录和执行状态</p>
+                            <h2 :style="{fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)'}">推送记录</h2>
+                            <p :style="{fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}">查看历史推送记录和执行状态</p>
                         </div>
                         <button @click="fetchPushRecords" class="btn btn-sm btn-secondary">
                             <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1312,7 +1365,7 @@
                         <div v-if="pushRecords.length > 0" style="overflow-x: auto;">
                             <table style="width: 100%; border-collapse: collapse;">
                                 <thead>
-                                    <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                    <tr style="background: var(--bg-card); border-bottom: 2px solid var(--border-color);">
                                         <th style="padding: 0.875rem; text-align: left; font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">时间</th>
                                         <th style="padding: 0.875rem; text-align: left; font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">状态</th>
                                         <th style="padding: 0.875rem; text-align: center; font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">推送条目</th>
@@ -1321,7 +1374,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="(record, idx) in pushRecords" :key="record.id" style="border-bottom: 1px solid #e5e7eb;">
+                                    <tr v-for="(record, idx) in pushRecords" :key="record.id" style="border-bottom: 1px solid var(--border-color);">
                                         <td style="padding: 0.875rem; font-size: 0.875rem; color: #374151;">
                                             {{ formatDateTime(record.timestamp) }}
                                         </td>
@@ -1375,7 +1428,7 @@
         </div>
         
         <!-- Footer -->
-        <footer style="max-width: 1400px; margin: 2rem auto 0; padding: 2rem; text-align: center; color: rgba(255, 255, 255, 0.9); border-top: 1px solid rgba(255, 255, 255, 0.2);">
+        <footer :style="{maxWidth: '1400px', margin: '2rem auto 0', padding: '2rem', textAlign: 'center', color: 'var(--text-footer)', borderTop: '1px solid var(--bg-footer)'}">
             <div style="display: flex; flex-direction: column; gap: 0.75rem; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: center;">
                     <span style="font-size: 0.875rem;">© 2024 TrendHub. All rights reserved.</span>
@@ -1528,6 +1581,33 @@
                 // 关键词规则说明弹框
                 const showKeywordRuleModal = ref(false)
 
+                // 深色模式
+                const isDarkMode = ref(false)
+
+                // 初始化深色模式
+                const initDarkMode = () => {
+                    const saved = localStorage.getItem('darkMode')
+                    if (saved === 'true') {
+                        isDarkMode.value = true
+                        document.documentElement.setAttribute('data-theme', 'dark')
+                    } else {
+                        isDarkMode.value = false
+                        document.documentElement.removeAttribute('data-theme')
+                    }
+                }
+
+                // 切换深色模式
+                const toggleDarkMode = () => {
+                    isDarkMode.value = !isDarkMode.value
+                    if (isDarkMode.value) {
+                        document.documentElement.setAttribute('data-theme', 'dark')
+                        localStorage.setItem('darkMode', 'true')
+                    } else {
+                        document.documentElement.removeAttribute('data-theme')
+                        localStorage.setItem('darkMode', 'false')
+                    }
+                }
+
                 // 窗口大小监听
                 const handleResize = () => { windowWidth.value = window.innerWidth }
                 window.addEventListener('resize', handleResize)
@@ -1546,6 +1626,24 @@
                         behavior: 'smooth'
                     })
                 }
+
+                // Select下拉框样式
+                const selectStyle = computed(() => {
+                    return {
+                        padding: '0.5rem 2.5rem 0.5rem 1rem',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.875rem',
+                        color: 'var(--text-input)',
+                        background: 'var(--bg-input)',
+                        cursor: 'pointer',
+                        appearance: 'none',
+                        backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22M6 8l4 4 4-4%22/%3E%3C/svg%3E")',
+                        backgroundPosition: 'right 0.5rem center',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundSize: '1.5rem'
+                    }
+                })
 
                 // 检查版本更新
                 const checkVersionUpdate = async () => {
@@ -1927,6 +2025,8 @@
                 }
 
                 onMounted(() => {
+                    // 初始化深色模式
+                    initDarkMode()
                     fetchRecentHistory()
                     fetchConfig()
                     fetchKeywords()
@@ -1953,7 +2053,8 @@
                     fetchPushRecords, prevPushRecordsPage, nextPushRecordsPage,
                     fetchRecentHistory, fetchHistoryDetail, getPlatformName, isToday,
                     showToast, showBackToTop, scrollToTop, showSettingsDropdown,
-                    versionUpdate, closeVersionUpdate, showKeywordRuleModal
+                    versionUpdate, closeVersionUpdate, showKeywordRuleModal,
+                    isDarkMode, toggleDarkMode, selectStyle
                 }
             }
         }).mount('#app')

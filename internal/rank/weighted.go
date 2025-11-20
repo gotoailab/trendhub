@@ -51,7 +51,7 @@ func (r *WeightedRanker) calculateScore(item *model.NewsItem) float64 {
 	if rank < 1 {
 		rank = 1
 	}
-	
+
 	rankScore := 1.0 / float64(rank) * 100.0 // 归一化到0-100区间
 
 	// 频次分：目前没有历史记录，默认就是1次
@@ -67,6 +67,6 @@ func (r *WeightedRanker) calculateScore(item *model.NewsItem) float64 {
 
 	// 加权总分
 	totalScore := rankScore*r.cfg.RankWeight + freqScore*r.cfg.FrequencyWeight + hotnessScore*r.cfg.HotnessWeight
-	
+
 	return totalScore
 }
