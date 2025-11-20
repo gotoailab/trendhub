@@ -3,7 +3,6 @@ package web
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
@@ -61,7 +60,7 @@ type ConfigRequest struct {
 func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	path := s.Runner.ConfigPath
 	if r.Method == "GET" {
-		content, err := ioutil.ReadFile(path)
+		content, err := os.ReadFile(path)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -100,8 +99,8 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 简单的备份
-		ioutil.WriteFile(path+".bak", yamlBytes, 0644) // ignore err for simplicity
-		if err := ioutil.WriteFile(path, yamlBytes, 0644); err != nil {
+		os.WriteFile(path+".bak", yamlBytes, 0644) // ignore err for simplicity
+		if err := os.WriteFile(path, yamlBytes, 0644); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -114,7 +113,7 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleKeywords(w http.ResponseWriter, r *http.Request) {
 	path := s.Runner.KeywordPath
 	if r.Method == "GET" {
-		content, err := ioutil.ReadFile(path)
+		content, err := os.ReadFile(path)
 		if err != nil {
 			if os.IsNotExist(err) {
 				json.NewEncoder(w).Encode(map[string]string{"content": ""})
@@ -131,7 +130,7 @@ func (s *Server) handleKeywords(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 关键词仍然是文本格式比较方便，或者前端解析后拼装回文本
-		if err := ioutil.WriteFile(path, []byte(req.Content), 0644); err != nil {
+		if err := os.WriteFile(path, []byte(req.Content), 0644); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
