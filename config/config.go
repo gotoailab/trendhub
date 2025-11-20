@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gotoailab/trendhub/internal/model"
+	"github.com/gotoailab/trendhub/internal/version"
 	"gopkg.in/yaml.v3"
 )
 
@@ -224,20 +225,8 @@ type VersionInfo struct {
 
 // GetCurrentVersion 获取当前版本号
 func GetCurrentVersion() (string, error) {
-	// 尝试从 version 文件读取
-	versionPath := "version"
-	if _, err := os.Stat(versionPath); err == nil {
-		data, err := os.ReadFile(versionPath)
-		if err == nil {
-			version := strings.TrimSpace(string(data))
-			if version != "" {
-				return version, nil
-			}
-		}
-	}
-
-	// 如果文件不存在或读取失败，返回默认版本
-	return "0.0.1", nil
+	// 从版本包中读取版本信息
+	return version.GetVersion(), nil
 }
 
 // FetchLatestVersion 从远程URL获取最新版本号

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/gotoailab/trendhub/internal/datacache"
 	"github.com/gotoailab/trendhub/internal/pushdb"
+	"github.com/gotoailab/trendhub/internal/version"
 	"github.com/gotoailab/trendhub/web"
 )
 
@@ -20,7 +22,18 @@ func main() {
 	webAddr := flag.String("addr", ":8080", "Web server address")
 	pushDBPath := flag.String("pushdb", "data/push_records.db", "Path to push records database")
 	cacheDBPath := flag.String("cachedb", "data/data_cache.db", "Path to data cache database")
+	showVersion := flag.Bool("version", false, "Show version information")
 	flag.Parse()
+
+	// 如果只是显示版本信息，打印后退出
+	if *showVersion {
+		buildInfo := version.GetBuildInfo()
+		fmt.Printf("TrendHub %s\n", buildInfo["version"])
+		fmt.Printf("Build Time: %s\n", buildInfo["buildTime"])
+		fmt.Printf("Git Commit: %s\n", buildInfo["gitCommit"])
+		fmt.Printf("Go Version: %s\n", buildInfo["goVersion"])
+		os.Exit(0)
+	}
 
 	// 初始化推送记录数据库
 	pushDB, err := pushdb.NewPushDB(*pushDBPath)

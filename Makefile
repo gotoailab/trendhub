@@ -1,12 +1,133 @@
-.PHONY: build run clean
+.PHONY: build run clean web dev install help test lint
 
+# 变量定义
+BINARY_NAME=trendhub
+BUILD_DIR=build
+VERSION_FILE=version
+VERSION=$(shell cat $(VERSION_FILE) 2>/dev/null || echo "dev")
+BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
+GIT_COMMIT=$(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+GO_VERSION=$(shell go version | awk '{print $$3}')
+LDFLAGS=-X 'github.com/gotoailab/trendhub/internal/version.Version=$(VERSION)' \
+        -X 'github.com/gotoailab/trendhub/internal/version.BuildTime=$(BUILD_TIME)' \
+        -X 'github.com/gotoailab/trendhub/internal/version.GitCommit=$(GIT_COMMIT)' \
+        -X 'github.com/gotoailab/trendhub/internal/version.GoVersion=$(GO_VERSION)' \
+        -s -w
+
+# 默认配置路径
+CONFIG_PATH?=config/config.yaml
+KEYWORDS_PATH?=config/frequency_words.txt
+WEB_ADDR?=:8080
+PUSH_DB_PATH?=data/push_records.db
+CACHE_DB_PATH?=data/data_cache.db
+
+# 帮助信息
+help:
+	@echo "TrendHub Makefile 命令："
+	@echo ""
+	@echo "构建相关："
+	@echo "  make build          - 构建可执行文件（带版本信息）"
+	@echo "  make build-fast     - 快速构建（不带版本信息）"
+	@echo "  make install        - 构建并安装到系统 PATH"
+	@echo ""
+	@echo "运行相关："
+	@echo "  make run            - 构建并运行（命令行模式）"
+	@echo "  make web            - 构建并运行 Web 模式"
+	@echo "  make dev            - 开发模式运行（不构建，直接 go run）"
+	@echo ""
+	@echo "运行参数示例："
+	@echo "  make run CONFIG_PATH=config/config.yaml KEYWORDS_PATH=config/frequency_words.txt"
+	@echo "  make web WEB_ADDR=:8080 CONFIG_PATH=config/config.yaml"
+	@echo ""
+	@echo "其他："
+	@echo "  make clean          - 清理构建文件"
+	@echo "  make test           - 运行测试"
+	@echo "  make lint           - 代码检查"
+	@echo "  make help           - 显示此帮助信息"
+
+# 构建（带版本信息）
 build:
-	go mod tidy
-	go build -o build/trendradar cmd/trendradar/main.go
+	@echo "构建 $(BINARY_NAME) v$(VERSION)..."
+	@echo "构建时间: $(BUILD_TIME)"
+	@echo "Git Commit: $(GIT_COMMIT)"
+	@echo "Go 版本: $(GO_VERSION)"
+	@mkdir -p $(BUILD_DIR)
+	@go mod tidy
+	@go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) cmd/main.go
+	@echo "构建完成: $(BUILD_DIR)/$(BINARY_NAME)"
+	@$(BUILD_DIR)/$(BINARY_NAME) -version 2>/dev/null || echo "提示: 程序可能不支持 -version 参数"
 
+# 快速构建（不带版本信息）
+build-fast:
+	@echo "快速构建 $(BINARY_NAME)..."
+	@mkdir -p $(BUILD_DIR)
+	@go mod tidy
+	@go build -o $(BUILD_DIR)/$(BINARY_NAME) cmd/main.go
+	@echo "构建完成: $(BUILD_DIR)/$(BINARY_NAME)"
+
+# 安装到系统
+install: build
+	@echo "安装 $(BINARY_NAME) 到系统..."
+	@sudo cp $(BUILD_DIR)/$(BINARY_NAME) /usr/local/bin/$(BINARY_NAME)
+	@echo "安装完成: /usr/local/bin/$(BINARY_NAME)"
+
+# 运行（命令行模式）
 run: build
-	./trendradar
+	@echo "运行 $(BINARY_NAME) (命令行模式)..."
+	@$(BUILD_DIR)/$(BINARY_NAME) \
+		-config $(CONFIG_PATH) \
+		-keywords $(KEYWORDS_PATH) \
+		-pushdb $(PUSH_DB_PATH) \
+		-cachedb $(CACHE_DB_PATH)
 
+# 运行 Web 模式
+web: build
+	@echo "运行 $(BINARY_NAME) (Web 模式)..."
+	@echo "访问地址: http://localhost$(WEB_ADDR)"
+	@$(BUILD_DIR)/$(BINARY_NAME) \
+		-web \
+		-addr $(WEB_ADDR) \
+		-config $(CONFIG_PATH) \
+		-keywords $(KEYWORDS_PATH) \
+		-pushdb $(PUSH_DB_PATH) \
+		-cachedb $(CACHE_DB_PATH)
+
+# 开发模式（直接运行，不构建）
+dev:
+	@echo "开发模式运行..."
+	@go run cmd/main.go \
+		-web \
+		-addr $(WEB_ADDR) \
+		-config $(CONFIG_PATH) \
+		-keywords $(KEYWORDS_PATH) \
+		-pushdb $(PUSH_DB_PATH) \
+		-cachedb $(CACHE_DB_PATH)
+
+# 清理构建文件
 clean:
-	rm -f trendradar
+	@echo "清理构建文件..."
+	@rm -rf $(BUILD_DIR)
+	@rm -f $(BINARY_NAME)
+	@echo "清理完成"
 
+# 运行测试
+test:
+	@echo "运行测试..."
+	@go test -v ./...
+
+# 代码检查
+lint:
+	@echo "代码检查..."
+	@go vet ./...
+	@echo "提示: 可以使用 golangci-lint 进行更详细的检查"
+
+# 创建必要的目录
+init-dirs:
+	@echo "创建必要的目录..."
+	@mkdir -p build data config
+	@echo "目录创建完成"
+
+# 显示版本信息
+version: build
+	@echo "显示版本信息..."
+	@$(BUILD_DIR)/$(BINARY_NAME) -version
