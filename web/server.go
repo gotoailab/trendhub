@@ -3,6 +3,7 @@ package web
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -105,6 +106,13 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+
+		// 重新加载配置并更新调度器和收集器
+		if err := s.Runner.ReloadConfig(r.Context()); err != nil {
+			log.Printf("Warning: Failed to reload configuration: %v", err)
+			// 仍然返回成功，因为文件已经保存
+		}
+
 		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

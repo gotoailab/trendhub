@@ -13,11 +13,13 @@ import (
 
 // DailyCollector 当日汇总数据收集器
 type DailyCollector struct {
+	cfg       *config.Config
 	crawler   crawler.Crawler
 	cache     *datacache.DataCache
 	interval  time.Duration
 	isRunning bool
 	stopChan  chan struct{}
+	ctx       context.Context
 	mu        sync.Mutex
 }
 
@@ -30,6 +32,7 @@ func NewDailyCollector(cfg *config.Config, cache *datacache.DataCache) *DailyCol
 	}
 
 	return &DailyCollector{
+		cfg:      cfg,
 		crawler:  c,
 		cache:    cache,
 		interval: interval,
@@ -40,14 +43,18 @@ func NewDailyCollector(cfg *config.Config, cache *datacache.DataCache) *DailyCol
 // Start 启动持续收集
 func (dc *DailyCollector) Start(ctx context.Context) {
 	dc.mu.Lock()
+	defer dc.mu.Unlock()
+
 	if dc.isRunning {
-		dc.mu.Unlock()
+		log.Println("Daily collector is already running")
 		return
 	}
-	dc.isRunning = true
-	dc.mu.Unlock()
 
-	log.Println("Daily collector started, collecting data every", dc.interval)
+	dc.ctx = ctx
+	dc.isRunning = true
+	dc.stopChan = make(chan struct{})
+
+	log.Printf("Daily collector started, collecting data every %v", dc.interval)
 
 	go func() {
 		// 立即执行一次
@@ -79,9 +86,87 @@ func (dc *DailyCollector) Stop() {
 		return
 	}
 
-	dc.isRunning = false
 	close(dc.stopChan)
+	dc.isRunning = false
 	log.Println("Daily collector stopped")
+}
+
+// ReloadConfig 重新加载配置
+func (dc *DailyCollector) ReloadConfig(newCfg *config.Config) error {
+	dc.mu.Lock()
+	defer dc.mu.Unlock()
+
+	log.Println("Reloading daily collector configuration...")
+
+	// 计算新的间隔时间
+	newInterval := time.Duration(newCfg.Crawler.RequestInterval) * time.Millisecond
+	if newInterval < time.Minute {
+		newInterval = 5 * time.Minute
+	}
+
+	// 保存旧配置
+	oldInterval := dc.interval
+	oldMode := dc.cfg.Report.Mode
+
+	// 检测配置变化
+	configChanged := oldInterval != newInterval
+
+	if oldMode != newCfg.Report.Mode {
+		log.Printf("Report mode changed: %s -> %s", oldMode, newCfg.Report.Mode)
+		configChanged = true
+	}
+
+	// 更新配置
+	dc.cfg = newCfg
+	dc.interval = newInterval
+	dc.crawler = crawler.NewNewsNowCrawler(newCfg)
+
+	if !configChanged {
+		log.Println("Daily collector configuration unchanged")
+		return nil
+	}
+
+	log.Printf("Daily collector configuration changed (interval: %v -> %v)", oldInterval, newInterval)
+
+	// 如果正在运行，需要重启
+	if dc.isRunning {
+		log.Println("Restarting daily collector with new configuration...")
+		
+		// 停止当前收集器
+		close(dc.stopChan)
+		dc.isRunning = false
+
+		// 如果新模式是 daily，重新启动
+		if newCfg.Report.Mode == "daily" {
+			dc.stopChan = make(chan struct{})
+			dc.isRunning = true
+
+			go func() {
+				dc.collect(dc.ctx)
+
+				ticker := time.NewTicker(dc.interval)
+				defer ticker.Stop()
+
+				for {
+					select {
+					case <-dc.ctx.Done():
+						dc.Stop()
+						return
+					case <-dc.stopChan:
+						return
+					case <-ticker.C:
+						dc.collect(dc.ctx)
+					}
+				}
+			}()
+
+			log.Println("Daily collector restarted successfully")
+		} else {
+			log.Println("Daily collector stopped (mode is not daily)")
+		}
+	}
+
+	return nil
 }
 
 // collect 执行一次数据收集

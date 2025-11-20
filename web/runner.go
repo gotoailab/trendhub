@@ -88,6 +88,60 @@ func (tr *TaskRunner) StopScheduler() {
 	}
 }
 
+// ReloadConfig 重新加载配置并更新调度器和收集器
+func (tr *TaskRunner) ReloadConfig(ctx context.Context) error {
+	log.Println("Reloading configuration for TaskRunner...")
+
+	// 加载新配置
+	cfg, err := config.LoadConfig(tr.ConfigPath, tr.KeywordPath)
+	if err != nil {
+		return fmt.Errorf("failed to reload config: %w", err)
+	}
+
+	// 1. 处理 Daily Collector
+	if cfg.Config.Report.Mode == "daily" {
+		if tr.DailyCollector == nil {
+			// 之前没有收集器，创建并启动
+			log.Println("Creating and starting daily collector (mode changed to daily)...")
+			tr.DailyCollector = collector.NewDailyCollector(cfg.Config, tr.DataCache)
+			tr.DailyCollector.Start(ctx)
+		} else {
+			// 已有收集器，重载配置
+			if err := tr.DailyCollector.ReloadConfig(cfg.Config); err != nil {
+				log.Printf("Failed to reload daily collector config: %v", err)
+			}
+		}
+	} else {
+		// 不是 daily 模式，停止收集器
+		if tr.DailyCollector != nil {
+			log.Println("Stopping daily collector (mode changed from daily)...")
+			tr.DailyCollector.Stop()
+			tr.DailyCollector = nil
+		}
+	}
+
+	// 2. 处理 Scheduler
+	if tr.Scheduler != nil {
+		if err := tr.Scheduler.ReloadConfig(&cfg.Config.Notification); err != nil {
+			log.Printf("Failed to reload scheduler config: %v", err)
+		}
+	} else if cfg.Config.Notification.PushWindow.Enabled {
+		// 之前没有调度器，但现在启用了，需要创建并启动
+		log.Println("Creating and starting scheduler (push window enabled)...")
+		taskFunc := func() (int, error) {
+			itemCount, err := tr.RunWithCount()
+			return itemCount, err
+		}
+		tr.Scheduler = scheduler.NewScheduler(&cfg.Config.Notification, tr.PushDB, taskFunc)
+		if err := tr.Scheduler.Start(ctx); err != nil {
+			log.Printf("Failed to start scheduler: %v", err)
+		}
+	}
+
+	log.Println("Configuration reloaded successfully")
+	return nil
+}
+
 // RunWithCount 执行任务并返回推送数量
 func (tr *TaskRunner) RunWithCount() (int, error) {
 	logOutput, err := tr.Run()

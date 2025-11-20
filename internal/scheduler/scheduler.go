@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/gotoailab/trendhub/config"
@@ -21,6 +22,8 @@ type Scheduler struct {
 	ticker    *time.Ticker
 	stopChan  chan struct{}
 	isRunning bool
+	mu        sync.RWMutex
+	ctx       context.Context
 }
 
 // NewScheduler 创建调度器
@@ -35,12 +38,23 @@ func NewScheduler(cfg *config.NotificationConfig, db *pushdb.PushDB, taskFunc Ta
 
 // Start 启动定时调度
 func (s *Scheduler) Start(ctx context.Context) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.isRunning {
+		log.Println("Scheduler is already running")
+		return nil
+	}
+
 	if !s.cfg.PushWindow.Enabled {
 		log.Println("Push window is disabled, scheduler will not start")
 		return nil
 	}
 
+	s.ctx = ctx
 	s.isRunning = true
+	s.stopChan = make(chan struct{})
+	
 	log.Printf("Scheduler started with time window: %s - %s\n", 
 		s.cfg.PushWindow.TimeRange.Start, 
 		s.cfg.PushWindow.TimeRange.End)
@@ -70,14 +84,129 @@ func (s *Scheduler) Start(ctx context.Context) error {
 
 // Stop 停止调度
 func (s *Scheduler) Stop() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if !s.isRunning {
+		return
+	}
+
 	if s.ticker != nil {
 		s.ticker.Stop()
+		s.ticker = nil
 	}
+	
+	close(s.stopChan)
+	s.isRunning = false
+	log.Println("Scheduler stopped")
+}
+
+// ReloadConfig 重新加载配置
+func (s *Scheduler) ReloadConfig(newCfg *config.NotificationConfig) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	log.Println("Reloading scheduler configuration...")
+
+	// 保存旧配置
+	oldEnabled := s.cfg.PushWindow.Enabled
+	oldStart := s.cfg.PushWindow.TimeRange.Start
+	oldEnd := s.cfg.PushWindow.TimeRange.End
+	oldOncePerDay := s.cfg.PushWindow.OncePerDay
+
+	// 更新配置
+	s.cfg = newCfg
+
+	// 检测配置变化
+	configChanged := oldEnabled != newCfg.PushWindow.Enabled ||
+		oldStart != newCfg.PushWindow.TimeRange.Start ||
+		oldEnd != newCfg.PushWindow.TimeRange.End ||
+		oldOncePerDay != newCfg.PushWindow.OncePerDay
+
+	if !configChanged {
+		log.Println("Scheduler configuration unchanged, no restart needed")
+		return nil
+	}
+
+	log.Printf("Scheduler configuration changed (enabled: %v -> %v, time: %s-%s -> %s-%s)",
+		oldEnabled, newCfg.PushWindow.Enabled,
+		oldStart, oldEnd,
+		newCfg.PushWindow.TimeRange.Start, newCfg.PushWindow.TimeRange.End)
+
+	// 如果正在运行，需要重启
 	if s.isRunning {
+		log.Println("Restarting scheduler with new configuration...")
+		
+		// 停止当前调度器（不加锁，因为已经加锁了）
+		if s.ticker != nil {
+			s.ticker.Stop()
+			s.ticker = nil
+		}
 		close(s.stopChan)
 		s.isRunning = false
-		log.Println("Scheduler stopped")
+
+		// 如果新配置启用了推送窗口，重新启动
+		if newCfg.PushWindow.Enabled {
+			s.stopChan = make(chan struct{})
+			s.isRunning = true
+			s.ticker = time.NewTicker(1 * time.Minute)
+
+			go func() {
+				s.checkAndRun()
+
+				for {
+					select {
+					case <-s.ctx.Done():
+						s.Stop()
+						return
+					case <-s.stopChan:
+						return
+					case <-s.ticker.C:
+						s.checkAndRun()
+					}
+				}
+			}()
+
+			log.Println("Scheduler restarted successfully")
+		} else {
+			log.Println("Scheduler stopped (push window disabled)")
+		}
+	} else {
+		// 如果之前没运行，但现在启用了，启动调度器
+		if newCfg.PushWindow.Enabled && s.ctx != nil {
+			log.Println("Starting scheduler (push window enabled)...")
+			s.stopChan = make(chan struct{})
+			s.isRunning = true
+			s.ticker = time.NewTicker(1 * time.Minute)
+
+			go func() {
+				s.checkAndRun()
+
+				for {
+					select {
+					case <-s.ctx.Done():
+						s.Stop()
+						return
+					case <-s.stopChan:
+						return
+					case <-s.ticker.C:
+						s.checkAndRun()
+					}
+				}
+			}()
+
+			log.Println("Scheduler started successfully")
+		}
 	}
+
+	return nil
+}
+
+// IsRunning 返回调度器是否正在运行
+func (s *Scheduler) IsRunning() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.isRunning
 }
 
 // checkAndRun 检查是否应该运行任务
