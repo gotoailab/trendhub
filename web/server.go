@@ -24,6 +24,7 @@ func (s *Server) Run(addr string) error {
 	http.HandleFunc("/api/keywords", s.enableCors(s.handleKeywords))
 	http.HandleFunc("/api/status", s.enableCors(s.handleStatus))
 	http.HandleFunc("/api/run", s.enableCors(s.handleRun))
+	http.HandleFunc("/api/push-records", s.enableCors(s.handlePushRecords))
 
 	// 静态文件服务
 	// 假设 web/static 在运行目录的相对路径下
@@ -167,4 +168,47 @@ func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	json.NewEncoder(w).Encode(map[string]string{"status": "started"})
+}
+
+func (s *Server) handlePushRecords(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if s.Runner.PushDB == nil {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"records": []interface{}{},
+			"total":   0,
+		})
+		return
+	}
+
+	// 获取分页参数
+	limit := 20
+	offset := 0
+	
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		fmt.Sscanf(limitStr, "%d", &limit)
+	}
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		fmt.Sscanf(offsetStr, "%d", &offset)
+	}
+
+	records, err := s.Runner.PushDB.GetRecords(limit, offset)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	total, err := s.Runner.PushDB.GetRecordCount()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"records": records,
+		"total":   total,
+	})
 }

@@ -13,13 +13,17 @@ import (
 	"github.com/gotoailab/trendhub/internal/crawler"
 	"github.com/gotoailab/trendhub/internal/filter"
 	"github.com/gotoailab/trendhub/internal/notifier"
+	"github.com/gotoailab/trendhub/internal/pushdb"
 	"github.com/gotoailab/trendhub/internal/rank"
+	"github.com/gotoailab/trendhub/internal/scheduler"
 )
 
 // TaskRunner 负责执行任务
 type TaskRunner struct {
 	ConfigPath  string
 	KeywordPath string
+	PushDB      *pushdb.PushDB
+	Scheduler   *scheduler.Scheduler
 	mu          sync.Mutex
 	IsRunning   bool
 	LastLog     string
@@ -27,10 +31,47 @@ type TaskRunner struct {
 	ExtraWriter io.Writer // 额外的日志输出目标（如 os.Stdout）
 }
 
-func NewTaskRunner(configPath, keywordPath string) *TaskRunner {
+func NewTaskRunner(configPath, keywordPath string, pushDB *pushdb.PushDB) *TaskRunner {
 	return &TaskRunner{
 		ConfigPath:  configPath,
 		KeywordPath: keywordPath,
+		PushDB:      pushDB,
+	}
+}
+
+// StartScheduler 启动定时调度器
+func (tr *TaskRunner) StartScheduler(ctx context.Context) error {
+	cfg, err := config.LoadConfig(tr.ConfigPath, tr.KeywordPath)
+	if err != nil {
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	if !cfg.Config.Notification.PushWindow.Enabled {
+		log.Println("Push window disabled, scheduler will not start")
+		return nil
+	}
+
+	// 创建任务函数
+	taskFunc := func() (int, error) {
+		logOutput, err := tr.Run()
+		if err != nil {
+			return 0, err
+		}
+		
+		// 解析日志以获取推送的条目数（简化版）
+		// 实际实现中可以从 Run() 返回更详细的信息
+		log.Println(logOutput)
+		return 0, nil
+	}
+
+	tr.Scheduler = scheduler.NewScheduler(&cfg.Config.Notification, tr.PushDB, taskFunc)
+	return tr.Scheduler.Start(ctx)
+}
+
+// StopScheduler 停止定时调度器
+func (tr *TaskRunner) StopScheduler() {
+	if tr.Scheduler != nil {
+		tr.Scheduler.Stop()
 	}
 }
 

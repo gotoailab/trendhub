@@ -492,6 +492,15 @@
                     </svg>
                     关键词配置
                 </button>
+                <button class="tab-item" :class="{active: currentTab === 'pushrecords'}" @click="currentTab = 'pushrecords'; fetchPushRecords()">
+                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                        </path>
+                    </svg>
+                    推送记录
+                </button>
                 </div>
 <!-- 仪表盘 -->
 <div v-show="currentTab === 'dashboard'" style="display: grid; gap: 1.5rem;">
@@ -775,6 +784,18 @@
                                                     <label class="form-label">Telegram Chat ID</label>
                                                     <input type="text" v-model="configObj.notification.webhooks.telegram_chat_id" class="form-control"
                                                         placeholder="-1001234567890">
+                                                    </div>
+                                                <div class="col-span-3">
+                                                    <label class="form-label">Bark Server URL</label>
+                                                    <input type="text" v-model="configObj.notification.webhooks.bark_server_url" class="form-control"
+                                                        placeholder="https://api.day.app">
+                                                    <div class="help-text">留空使用官方服务器，或填写自建服务器地址</div>
+                                                    </div>
+                                                <div class="col-span-3">
+                                                    <label class="form-label">Bark Device Key</label>
+                                                    <input type="text" v-model="configObj.notification.webhooks.bark_device_key" class="form-control"
+                                                        placeholder="你的设备密钥">
+                                                    <div class="help-text">在 Bark App 中查看</div>
                                                     </div>
                                                     </div>
                                                     </div>
@@ -1118,6 +1139,85 @@
                                 </div>
             </div>
 
+            <!-- 推送记录 -->
+            <div v-show="currentTab === 'pushrecords'">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">推送记录</h2>
+                            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">查看历史推送记录和执行状态</p>
+                        </div>
+                        <button @click="fetchPushRecords" class="btn btn-sm btn-secondary">
+                            <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            刷新
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div v-if="pushRecords.length > 0" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                        <th style="padding: 0.875rem; text-align: left; font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">时间</th>
+                                        <th style="padding: 0.875rem; text-align: left; font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">状态</th>
+                                        <th style="padding: 0.875rem; text-align: center; font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">推送条目</th>
+                                        <th style="padding: 0.875rem; text-align: center; font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">耗时</th>
+                                        <th style="padding: 0.875rem; text-align: left; font-size: 0.8125rem; font-weight: 600; color: #6b7280; text-transform: uppercase;">错误信息</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(record, idx) in pushRecords" :key="record.id" style="border-bottom: 1px solid #e5e7eb;">
+                                        <td style="padding: 0.875rem; font-size: 0.875rem; color: #374151;">
+                                            {{ formatDateTime(record.timestamp) }}
+                                        </td>
+                                        <td style="padding: 0.875rem;">
+                                            <span v-if="record.status === 'success'" class="badge badge-success">成功</span>
+                                            <span v-else-if="record.status === 'failed'" style="display: inline-flex; align-items: center; padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; background: #fee2e2; color: #991b1b;">失败</span>
+                                            <span v-else style="display: inline-flex; align-items: center; padding: 0.375rem 0.75rem; font-size: 0.75rem; font-weight: 600; border-radius: 9999px; background: #fef3c7; color: #92400e;">部分成功</span>
+                                        </td>
+                                        <td style="padding: 0.875rem; text-align: center; font-size: 0.875rem; color: #374151; font-weight: 600;">
+                                            {{ record.item_count }}
+                                        </td>
+                                        <td style="padding: 0.875rem; text-align: center; font-size: 0.875rem; color: #6b7280;">
+                                            {{ formatDuration(record.duration) }}
+                                        </td>
+                                        <td style="padding: 0.875rem; font-size: 0.8125rem; color: #6b7280; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" :title="record.error_msg">
+                                            {{ record.error_msg || '-' }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            
+                            <!-- 分页 -->
+                            <div v-if="pushRecordTotal > pushRecordLimit" style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+                                <button @click="prevPushRecordsPage" :disabled="pushRecordOffset === 0" class="btn btn-sm btn-secondary">
+                                    <svg style="width: 1rem; height: 1rem; margin-right: 0.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                                    </svg>
+                                    上一页
+                                </button>
+                                <span style="font-size: 0.875rem; color: #6b7280;">
+                                    {{ Math.floor(pushRecordOffset / pushRecordLimit) + 1 }} / {{ Math.ceil(pushRecordTotal / pushRecordLimit) }}
+                                </span>
+                                <button @click="nextPushRecordsPage" :disabled="pushRecordOffset + pushRecordLimit >= pushRecordTotal" class="btn btn-sm btn-secondary">
+                                    下一页
+                                    <svg style="width: 1rem; height: 1rem; margin-left: 0.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div v-else class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                            </svg>
+                            <p>暂无推送记录</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
         
         <!-- Toast 通知 -->
@@ -1156,6 +1256,12 @@
                 const isRawKeywords = ref(false)
                 const keywordsContent = ref('')
                 const keywordGroups = ref([])
+
+                // Push Records State
+                const pushRecords = ref([])
+                const pushRecordTotal = ref(0)
+                const pushRecordLimit = ref(20)
+                const pushRecordOffset = ref(0)
 
                 // Toast
                 const toast = ref({ show: false, message: '', type: 'success' })
@@ -1393,6 +1499,58 @@
                     }
                 }
 
+                const formatDateTime = (t) => {
+                    if (!t) return '-'
+                    try {
+                        return new Date(t).toLocaleString('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        })
+                    } catch (e) {
+                        return t
+                    }
+                }
+
+                const formatDuration = (ms) => {
+                    if (!ms) return '-'
+                    if (ms < 1000) return ms + 'ms'
+                    const seconds = Math.floor(ms / 1000)
+                    if (seconds < 60) return seconds + 's'
+                    const minutes = Math.floor(seconds / 60)
+                    const remainingSeconds = seconds % 60
+                    return `${minutes}m ${remainingSeconds}s`
+                }
+
+                const fetchPushRecords = async () => {
+                    try {
+                        const res = await fetch(`/api/push-records?limit=${pushRecordLimit.value}&offset=${pushRecordOffset.value}`)
+                        const data = await res.json()
+                        pushRecords.value = data.records || []
+                        pushRecordTotal.value = data.total || 0
+                    } catch (e) {
+                        console.error('获取推送记录失败:', e)
+                        showToast('获取推送记录失败', 'error')
+                    }
+                }
+
+                const prevPushRecordsPage = () => {
+                    if (pushRecordOffset.value > 0) {
+                        pushRecordOffset.value = Math.max(0, pushRecordOffset.value - pushRecordLimit.value)
+                        fetchPushRecords()
+                    }
+                }
+
+                const nextPushRecordsPage = () => {
+                    if (pushRecordOffset.value + pushRecordLimit.value < pushRecordTotal.value) {
+                        pushRecordOffset.value += pushRecordLimit.value
+                        fetchPushRecords()
+                    }
+                }
+
                 onMounted(() => {
                     fetchStatus()
                     fetchConfig()
@@ -1411,8 +1569,11 @@
                     isRawKeywords, keywordsContent, keywordGroups, toggleKeywordMode,
                     addKeywordGroup, removeKeywordGroup, addWord, removeWord,
                     addPlatform, removePlatform,
+                    pushRecords, pushRecordTotal, pushRecordLimit, pushRecordOffset,
                     saveConfig, saveKeywords, runTask, clearLog,
-                    formatTime, fetchStatus, showToast
+                    formatTime, formatDateTime, formatDuration,
+                    fetchStatus, fetchPushRecords, prevPushRecordsPage, nextPushRecordsPage,
+                    showToast
                 }
             }
         }).mount('#app')

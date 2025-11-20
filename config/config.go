@@ -32,12 +32,12 @@ type ReportConfig struct {
 
 // PushWindowConfig 推送窗口配置
 type PushWindowConfig struct {
-	Enabled                 bool `yaml:"enabled" json:"enabled"`
-	TimeRange               struct {
+	Enabled   bool `yaml:"enabled" json:"enabled"`
+	TimeRange struct {
 		Start string `yaml:"start" json:"start"`
 		End   string `yaml:"end" json:"end"`
 	} `yaml:"time_range" json:"time_range"`
-	OncePerDay             bool `yaml:"once_per_day" json:"once_per_day"`
+	OncePerDay              bool `yaml:"once_per_day" json:"once_per_day"`
 	PushRecordRetentionDays int  `yaml:"push_record_retention_days" json:"push_record_retention_days"`
 }
 
@@ -56,6 +56,8 @@ type WebhooksConfig struct {
 	NtfyServerURL    string `yaml:"ntfy_server_url" json:"ntfy_server_url"`
 	NtfyTopic        string `yaml:"ntfy_topic" json:"ntfy_topic"`
 	NtfyToken        string `yaml:"ntfy_token" json:"ntfy_token"`
+	BarkServerURL    string `yaml:"bark_server_url" json:"bark_server_url"`
+	BarkDeviceKey    string `yaml:"bark_device_key" json:"bark_device_key"`
 }
 
 // NotificationConfig 通知配置
@@ -125,13 +127,13 @@ func LoadConfig(configPath string, keywordPath string) (*GlobalConfig, error) {
 	if envVal := os.Getenv("WEWORK_WEBHOOK_URL"); envVal != "" {
 		cfg.Notification.Webhooks.WeworkURL = envVal
 	}
-    if envVal := os.Getenv("TELEGRAM_BOT_TOKEN"); envVal != "" {
-        cfg.Notification.Webhooks.TelegramBotToken = envVal
-    }
-    if envVal := os.Getenv("TELEGRAM_CHAT_ID"); envVal != "" {
-        cfg.Notification.Webhooks.TelegramChatID = envVal
-    }
-    // ... 其他环境变量覆盖逻辑 ...
+	if envVal := os.Getenv("TELEGRAM_BOT_TOKEN"); envVal != "" {
+		cfg.Notification.Webhooks.TelegramBotToken = envVal
+	}
+	if envVal := os.Getenv("TELEGRAM_CHAT_ID"); envVal != "" {
+		cfg.Notification.Webhooks.TelegramChatID = envVal
+	}
+	// ... 其他环境变量覆盖逻辑 ...
 
 	// 2. 读取 frequency_words.txt
 	kwGroups, filters, err := loadKeywords(keywordPath)
@@ -175,7 +177,7 @@ func loadKeywords(path string) ([]KeywordGroup, []string, error) {
 		// 原版逻辑里，filter_words 是全局收集的，group里也会标记。
 		// 我们这里遵循原版逻辑：!开头的词会被加入到该组的过滤列表，同时也会被加入到返回值里的 globalFilters (如果是全局行为)
 		// 看原版代码：filter_words 列表是收集所有以 ! 开头的词。
-		
+
 		for _, line := range lines {
 			line = strings.TrimSpace(line)
 			if line == "" {
@@ -208,4 +210,3 @@ func loadKeywords(path string) ([]KeywordGroup, []string, error) {
 
 	return groups, globalFilters, nil
 }
-

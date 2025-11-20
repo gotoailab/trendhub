@@ -34,8 +34,6 @@ notification:
         telegram_bot_token: ""
         telegram_chat_id: ""
         wework_url: ""
-        bark_server_url: "https://api.day.app"
-        bark_device_key: ""
 platforms:
     - id: toutiao
       name: 今日头条
