@@ -204,11 +204,7 @@
             display: flex;
             gap: 0.5rem;
             border-bottom: 2px solid #e5e7eb;
-            margin-bottom: 2rem;
             flex-wrap: wrap;
-            background: rgba(255, 255, 255, 0.3);
-            padding: 0.5rem;
-            border-radius: 0.75rem 0.75rem 0 0;
         }
         
         .tab-item {
@@ -216,26 +212,49 @@
             font-size: 0.875rem;
             font-weight: 600;
             color: #6b7280;
-            background: rgba(255, 255, 255, 0.5);
+            background: transparent;
             border: none;
             border-bottom: 3px solid transparent;
-            border-radius: 0.5rem 0.5rem 0 0;
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
-            top: 2px;
         }
         
         .tab-item:hover {
             color: #667eea;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(102, 126, 234, 0.05);
         }
         
         .tab-item.active {
             color: #667eea;
-            background: white;
-            border-bottom-color: #667eea;
-            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+            background: transparent;
+        }
+        
+        /* 下拉菜单项 */
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        
+        .dropdown-item:hover {
+            background: #f3f4f6;
+            color: #667eea;
+        }
+        
+        .dropdown-item.active {
+            background: #eef2ff;
+            color: #667eea;
+            font-weight: 600;
         }
         
         /* 关键词标签 */
@@ -416,77 +435,91 @@
         <!-- 顶部导航栏 -->
         <nav
             style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-            <div
-                style="max-width: 1400px; margin: 0 auto; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <svg style="width: 2.5rem; height: 2.5rem; color: #667eea;" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
-                    </svg>
-                    <div>
-                        <h1
-                            style="font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">
-                            TrendHub</h1>
-                        <p style="font-size: 0.75rem; color: #6b7280;">热点趋势监控管理平台</p>
+            <div style="max-width: 1400px; margin: 0 auto; padding: 1rem 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 2rem;">
+                    <!-- Logo和标题 -->
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-shrink: 0;">
+                        <svg style="width: 2.5rem; height: 2.5rem; color: #667eea;" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                        <div>
+                            <h1
+                                style="font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; color: transparent;">
+                                TrendHub</h1>
+                            <p style="font-size: 0.75rem; color: #6b7280;">热点趋势监控管理平台</p>
                         </div>
+                    </div>
+                    <!-- 标签导航 -->
+                    <div class="tabs" style="flex: 1; justify-content: flex-end; border-bottom: none; margin: 0;">
+                        <button class="tab-item" :class="{active: currentTab === 'history'}" @click="currentTab = 'history'; fetchRecentHistory()">                            
+                            首页
+                        </button>
+                        <!-- 功能设置下拉菜单 -->
+                        <div class="settings-dropdown-container" style="position: relative;" 
+                             @mouseenter="showSettingsDropdown = true"
+                             @mouseleave="showSettingsDropdown = false">
+                            <button 
+                                class="tab-item" 
+                                :class="{active: currentTab === 'config' || currentTab === 'platforms' || currentTab === 'keywords'}">                                
+                                功能设置
+                            </button>
+                            <!-- 下拉菜单 -->
+                            <div v-show="showSettingsDropdown" 
+                                 style="position: absolute; top: 100%; right: 0; padding-top: 0.5rem; background: transparent; z-index: 1000;">
+                                <div style="background: white; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); min-width: 180px; overflow: hidden;">
+                                <button 
+                                    class="dropdown-item" 
+                                    :class="{active: currentTab === 'config'}"
+                                    @click="currentTab = 'config'">
+                                    <svg style="display: inline-block; width: 1rem; height: 1rem; margin-right: 0.5rem; vertical-align: middle;"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                        </path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                                        </path>
+                                    </svg>
+                                    系统配置
+                                </button>
+                                <button 
+                                    class="dropdown-item" 
+                                    :class="{active: currentTab === 'platforms'}"
+                                    @click="currentTab = 'platforms'">
+                                    <svg style="display: inline-block; width: 1rem; height: 1rem; margin-right: 0.5rem; vertical-align: middle;"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                        </path>
+                                    </svg>
+                                    平台管理
+                                </button>
+                                <button 
+                                    class="dropdown-item" 
+                                    :class="{active: currentTab === 'keywords'}"
+                                    @click="currentTab = 'keywords'">
+                                    <svg style="display: inline-block; width: 1rem; height: 1rem; margin-right: 0.5rem; vertical-align: middle;"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                        </path>
+                                    </svg>
+                                    关键词配置
+                                </button>
+                                </div>
+                            </div>
                         </div>
+                        <button class="tab-item" :class="{active: currentTab === 'pushrecords'}" @click="currentTab = 'pushrecords'; fetchPushRecords()">
+                            推送记录
+                        </button>
+                    </div>
+                </div>
             </div>
         </nav>
 
         <!-- 主容器 -->
         <div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
-            
-            <!-- 标签导航 -->
-            <div class="tabs">
-                <button class="tab-item" :class="{active: currentTab === 'history'}" @click="currentTab = 'history'; fetchRecentHistory()">
-                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6">
-                        </path>
-                    </svg>
-                    Trending
-                </button>
-                <button class="tab-item" :class="{active: currentTab === 'config'}" @click="currentTab = 'config'">
-                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                        </path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
-                        </path>
-                    </svg>
-                    系统配置
-                </button>
-                <button class="tab-item" :class="{active: currentTab === 'platforms'}" @click="currentTab = 'platforms'">
-                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                        </path>
-                    </svg>
-                    平台管理
-                </button>
-                <button class="tab-item" :class="{active: currentTab === 'keywords'}" @click="currentTab = 'keywords'">
-                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                        </path>
-                    </svg>
-                    关键词配置
-                </button>
-                <button class="tab-item" :class="{active: currentTab === 'pushrecords'}" @click="currentTab = 'pushrecords'; fetchPushRecords()">
-                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                        </path>
-                    </svg>
-                    推送记录
-                </button>
-                        </div>
 <!-- Trending -->
 <div v-show="currentTab === 'history'">
     <!-- 标题栏 -->
@@ -526,15 +559,20 @@
     <!-- 内容列表 -->
     <div v-if="historyDetail && historyDetail.items && historyDetail.items.length > 0" style="display: grid; gap: 0.75rem;">
         <div v-for="(item, idx) in historyDetail.items" :key="idx"
-            style="display: flex; gap: 1rem; padding: 1rem 1.25rem; border-radius: 0.5rem; background: white; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); transition: all 0.2s;"
-            :style="item.url ? 'cursor: pointer;' : ''"
-            @mouseenter="$event.currentTarget.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'; $event.currentTarget.style.transform='translateY(-2px)'"
-            @mouseleave="$event.currentTarget.style.boxShadow='0 1px 3px 0 rgba(0, 0, 0, 0.1)'; $event.currentTarget.style.transform='translateY(0)'"
-            @click="item.url && window.open(item.url, '_blank')">
+            style="display: flex; gap: 1rem; padding: 1rem 1.25rem; border-radius: 0.5rem; background: white; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); transition: all 0.2s;">
             <span style="font-weight: 700; color: #2563eb; min-width: 2.5rem; font-size: 1.25rem;">{{ idx + 1 }}</span>
             <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.375rem;">
-                    <span style="color: #111827; font-weight: 500; font-size: 1rem; flex: 1;">{{ item.title }}</span>
+                    <a v-if="item.url" 
+                       :href="item.url" 
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       style="color: #111827; font-weight: 500; font-size: 1rem; flex: 1; text-decoration: none; transition: color 0.2s;"
+                       @mouseenter="$event.currentTarget.style.color='#667eea'"
+                       @mouseleave="$event.currentTarget.style.color='#111827'">
+                        {{ item.title }}
+                    </a>
+                    <span v-else style="color: #111827; font-weight: 500; font-size: 1rem; flex: 1;">{{ item.title }}</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: #6b7280;">
                     <span style="background: #e0e7ff; color: #4338ca; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-weight: 500;">
@@ -543,10 +581,10 @@
                     <span v-if="item.ranks && item.ranks.length > 0">
                         原榜单 #{{ item.ranks[0] }}
                     </span>
-                    </div>
-                    </div>
-                    </div>
-                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 <!-- 空状态 -->
 <div v-else-if="historyDetail && historyDetail.items" class="empty-state" style="margin-top: 3rem; padding: 3rem;">
     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1315,7 +1353,8 @@
                 // 返回顶部按钮
                 const showBackToTop = ref(false)
 
-                let pollTimer = null
+                // 功能设置下拉菜单
+                const showSettingsDropdown = ref(false)
 
                 // 窗口大小监听
                 const handleResize = () => { windowWidth.value = window.innerWidth }
@@ -1326,6 +1365,7 @@
                     showBackToTop.value = window.scrollY > 300
                 }
                 window.addEventListener('scroll', handleScroll)
+
 
                 // 返回顶部
                 const scrollToTop = () => {
@@ -1681,14 +1721,11 @@
 
                 onMounted(() => {
                     fetchRecentHistory()
-                    fetchStatus()
                     fetchConfig()
                     fetchKeywords()
-                    pollTimer = setInterval(fetchStatus, 3000)
                 })
 
                 onUnmounted(() => {
-                    if (pollTimer) clearInterval(pollTimer)
                     if (autoRefreshTimer) clearTimeout(autoRefreshTimer)
                     window.removeEventListener('resize', handleResize)
                     window.removeEventListener('scroll', handleScroll)
@@ -1706,7 +1743,7 @@
                     formatTime, formatDateTime, formatDuration,
                     fetchPushRecords, prevPushRecordsPage, nextPushRecordsPage,
                     fetchRecentHistory, fetchHistoryDetail, getPlatformName, isToday,
-                    showToast, showBackToTop, scrollToTop
+                    showToast, showBackToTop, scrollToTop, showSettingsDropdown
                 }
             }
         }).mount('#app')

@@ -1,6 +1,6 @@
 app:
     show_version_update: true
-    version_check_url: https://raw.githubusercontent.com/sansan0/TrendRadar/refs/heads/master/version
+    version_check_url: https://raw.githubusercontent.com/gotoailab/trendhub/refs/heads/master/version
 crawler:
     default_proxy: http://127.0.0.1:10086
     enable_crawler: true
