@@ -3,8 +3,11 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gotoailab/trendhub/internal/model"
 	"gopkg.in/yaml.v3"
@@ -209,4 +212,136 @@ func loadKeywords(path string) ([]KeywordGroup, []string, error) {
 	}
 
 	return groups, globalFilters, nil
+}
+
+// VersionInfo 版本信息
+type VersionInfo struct {
+	CurrentVersion string `json:"current_version"`
+	LatestVersion  string `json:"latest_version"`
+	HasUpdate      bool   `json:"has_update"`
+	UpdateURL      string `json:"update_url,omitempty"`
+}
+
+// GetCurrentVersion 获取当前版本号
+func GetCurrentVersion() (string, error) {
+	// 尝试从 version 文件读取
+	versionPath := "version"
+	if _, err := os.Stat(versionPath); err == nil {
+		data, err := ioutil.ReadFile(versionPath)
+		if err == nil {
+			version := strings.TrimSpace(string(data))
+			if version != "" {
+				return version, nil
+			}
+		}
+	}
+
+	// 如果文件不存在或读取失败，返回默认版本
+	return "1.0.0", nil
+}
+
+// FetchLatestVersion 从远程URL获取最新版本号
+func FetchLatestVersion(versionCheckURL string) (string, error) {
+	if versionCheckURL == "" {
+		return "", fmt.Errorf("version check URL is empty")
+	}
+
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Get(versionCheckURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch version: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to fetch version: HTTP %d", resp.StatusCode)
+	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read version response: %w", err)
+	}
+
+	version := strings.TrimSpace(string(data))
+	if version == "" {
+		return "", fmt.Errorf("empty version string")
+	}
+
+	return version, nil
+}
+
+// CompareVersions 比较两个版本号，返回：
+// -1: v1 < v2
+//  0: v1 == v2
+//  1: v1 > v2
+func CompareVersions(v1, v2 string) (int, error) {
+	parts1 := strings.Split(strings.TrimPrefix(v1, "v"), ".")
+	parts2 := strings.Split(strings.TrimPrefix(v2, "v"), ".")
+
+	maxLen := len(parts1)
+	if len(parts2) > maxLen {
+		maxLen = len(parts2)
+	}
+
+	for i := 0; i < maxLen; i++ {
+		var num1, num2 int
+		var err error
+
+		if i < len(parts1) {
+			num1, err = strconv.Atoi(parts1[i])
+			if err != nil {
+				return 0, fmt.Errorf("invalid version format: %s", v1)
+			}
+		}
+
+		if i < len(parts2) {
+			num2, err = strconv.Atoi(parts2[i])
+			if err != nil {
+				return 0, fmt.Errorf("invalid version format: %s", v2)
+			}
+		}
+
+		if num1 < num2 {
+			return -1, nil
+		}
+		if num1 > num2 {
+			return 1, nil
+		}
+	}
+
+	return 0, nil
+}
+
+// CheckVersionUpdate 检查版本更新
+func CheckVersionUpdate(versionCheckURL string) (*VersionInfo, error) {
+	currentVersion, err := GetCurrentVersion()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current version: %w", err)
+	}
+
+	latestVersion, err := FetchLatestVersion(versionCheckURL)
+	if err != nil {
+		// 如果获取最新版本失败，返回当前版本信息，但不标记为有更新
+		return &VersionInfo{
+			CurrentVersion: currentVersion,
+			LatestVersion:  "",
+			HasUpdate:      false,
+		}, nil
+	}
+
+	compareResult, err := CompareVersions(currentVersion, latestVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to compare versions: %w", err)
+	}
+
+	hasUpdate := compareResult < 0
+
+	return &VersionInfo{
+		CurrentVersion: currentVersion,
+		LatestVersion:  latestVersion,
+		HasUpdate:      hasUpdate,
+	}, nil
 }

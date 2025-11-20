@@ -28,6 +28,7 @@ func (s *Server) Run(addr string) error {
 	http.HandleFunc("/api/push-records", s.enableCors(s.handlePushRecords))
 	http.HandleFunc("/api/crawl-history", s.enableCors(s.handleCrawlHistory))
 	http.HandleFunc("/api/crawl-history/recent", s.enableCors(s.handleRecentHistory))
+	http.HandleFunc("/api/version", s.enableCors(s.handleVersion))
 
 	// 静态文件服务
 	// 假设 web/static 在运行目录的相对路径下
@@ -296,4 +297,53 @@ func (s *Server) handlePushRecords(w http.ResponseWriter, r *http.Request) {
 		"records": records,
 		"total":   total,
 	})
+}
+
+// handleVersion 处理版本检查请求
+func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// 加载配置以获取版本检查URL
+	cfg, err := config.LoadConfig(s.Runner.ConfigPath, s.Runner.KeywordPath)
+	if err != nil {
+		// 如果加载配置失败，仍然返回当前版本
+		currentVersion, _ := config.GetCurrentVersion()
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"current_version": currentVersion,
+			"latest_version":  "",
+			"has_update":      false,
+			"error":           "Failed to load config",
+		})
+		return
+	}
+
+	// 如果未启用版本更新提示，直接返回当前版本
+	if !cfg.Config.App.ShowVersionUpdate {
+		currentVersion, _ := config.GetCurrentVersion()
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"current_version": currentVersion,
+			"latest_version":  "",
+			"has_update":      false,
+		})
+		return
+	}
+
+	// 检查版本更新
+	versionInfo, err := config.CheckVersionUpdate(cfg.Config.App.VersionCheckURL)
+	if err != nil {
+		// 如果检查失败，返回当前版本信息
+		currentVersion, _ := config.GetCurrentVersion()
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"current_version": currentVersion,
+			"latest_version":  "",
+			"has_update":      false,
+			"error":           err.Error(),
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(versionInfo)
 }
