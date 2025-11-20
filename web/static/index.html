@@ -429,8 +429,8 @@
                             style="font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                             TrendHub</h1>
                         <p style="font-size: 0.75rem; color: #6b7280;">热点趋势监控管理平台</p>
-                    </div>
-                </div>
+                        </div>
+                        </div>
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <div style="text-align: right; margin-right: 0.5rem; display: none;"
                         :style="{display: windowWidth > 640 ? 'block' : 'none'}">
@@ -440,13 +440,13 @@
                     <span v-if="status.isRunning" class="badge badge-success" style="gap: 0.5rem;">
                         <span
                             style="width: 0.5rem; height: 0.5rem; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></span>
-                        运行中
-                    </span>
+                            运行中
+                        </span>
                     <span v-else class="badge badge-info">
                         空闲中
-                    </span>
-                    </div>
-                    </div>
+                        </span>
+                </div>
+            </div>
         </nav>
 
         <!-- 主容器 -->
@@ -501,7 +501,7 @@
                     </svg>
                     推送记录
                 </button>
-                </div>
+                        </div>
 <!-- 历史数据 -->
 <div v-show="currentTab === 'history'" style="display: grid; gap: 1.5rem;">
     <div class="card">
@@ -512,36 +512,31 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                 </svg>
                 刷新
-            </button>
-        </div>
+                            </button>
+                            </div>
         <div class="card-body">
             <!-- 日期选择 -->
             <div style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #374151;">选择日期</label>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem;">
-                    <!-- 今日实时 -->
-                    <button @click="selectedDate = 'today'; fetchCurrentData()"
+                    <button v-for="date in availableDates" :key="date.value"
+                        @click="selectedDate = date.value; fetchHistoryDetail(date.value)"
                         class="btn"
-                        :class="selectedDate === 'today' ? 'btn-primary' : 'btn-secondary'"
+                        :class="selectedDate === date.value ? 'btn-primary' : 'btn-secondary'"
                         style="display: flex; flex-direction: column; align-items: center; padding: 0.75rem; height: auto; position: relative;">
-                        <svg v-if="selectedDate === 'today'" style="position: absolute; top: 0.25rem; right: 0.25rem; width: 0.75rem; height: 0.75rem; color: #10b981;" fill="currentColor" viewBox="0 0 20 20">
+                        <svg v-if="date.isToday && selectedDate === date.value" 
+                            style="position: absolute; top: 0.25rem; right: 0.25rem; width: 0.75rem; height: 0.75rem; color: #10b981;" 
+                            fill="currentColor" viewBox="0 0 20 20">
                             <circle cx="10" cy="10" r="3">
                                 <animate attributeName="opacity" values="1;0.3;1" dur="2s" repeatCount="indefinite"/>
                             </circle>
                         </svg>
-                        <span style="font-size: 0.875rem; font-weight: 600;">📡 今日实时</span>
-                        <span style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">{{ currentDataCount }} 条</span>
+                        <span style="font-size: 0.875rem; font-weight: 600;">
+                            {{ date.isToday ? '📡 ' : '' }}{{ date.label }}
+                        </span>
+                        <span style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">{{ date.count }} 条</span>
                     </button>
-                    <!-- 历史日期 -->
-                    <button v-for="hist in recentHistories" :key="hist.date"
-                        @click="selectedDate = hist.date; fetchHistoryDetail(hist.date)"
-                        class="btn"
-                        :class="selectedDate === hist.date ? 'btn-primary' : 'btn-secondary'"
-                        style="display: flex; flex-direction: column; align-items: center; padding: 0.75rem; height: auto;">
-                        <span style="font-size: 0.875rem; font-weight: 600;">{{ hist.date }}</span>
-                        <span style="font-size: 0.75rem; opacity: 0.8; margin-top: 0.25rem;">{{ hist.item_count }} 条</span>
-                    </button>
-                </div>
+                        </div>
                 <div v-if="recentHistories.length === 0" class="empty-state" style="margin-top: 1rem;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -549,22 +544,22 @@
                         </path>
                     </svg>
                     <p>暂无历史数据</p>
+                    </div>
                 </div>
-            </div>
 
             <!-- 数据详情 -->
             <div v-if="historyDetail && selectedDate" style="border-top: 1px solid #e5e7eb; padding-top: 1.5rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                     <h3 style="font-weight: 600; color: #111827;">
-                        <span v-if="selectedDate === 'today'">📡 今日实时数据</span>
-                        <span v-else>{{ selectedDate }} 抓取数据</span>
+                        <span v-if="isToday(selectedDate)">📡 今日实时 Trending</span>
+                        <span v-else>{{ selectedDate }} Trending</span>
                     </h3>
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <span style="color: #6b7280; font-size: 0.875rem;">
                             共 {{ historyDetail.item_count }} 条 | 
                             {{ new Date(historyDetail.timestamp).toLocaleString('zh-CN') }}
                         </span>
-                        <button v-if="selectedDate === 'today'" @click="fetchCurrentData()" class="btn btn-sm btn-secondary">
+                        <button @click="fetchHistoryDetail(selectedDate)" class="btn btn-sm btn-secondary">
                             <svg style="width: 1rem; height: 1rem; margin-right: 0.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
@@ -573,41 +568,50 @@
                     </div>
                 </div>
                 
-                <!-- 按平台分组显示 -->
-                <div style="display: grid; gap: 1.5rem;">
-                    <div v-for="(items, platform) in historyDetail.data" :key="platform" class="card" style="border: 1px solid #e5e7eb;">
-                        <div class="card-header" style="background: #f9fafb;">
-                            <h4 style="font-weight: 600; color: #111827;">
-                                {{ getPlatformName(platform) }}
-                                <span style="color: #6b7280; font-weight: normal; font-size: 0.875rem; margin-left: 0.5rem;">
-                                    ({{ items.length }} 条)
-                                </span>
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <div style="display: grid; gap: 0.75rem;">
-                                <div v-for="(item, idx) in items.slice(0, 20)" :key="idx"
-                                    style="display: flex; padding: 0.75rem; border-radius: 0.375rem; background: #f9fafb; hover:background: #f3f4f6; transition: background 0.2s;">
-                                    <span style="font-weight: 600; color: #6b7280; min-width: 2rem;">{{ item.ranks[0] }}.</span>
-                                    <div style="flex: 1;">
+                <!-- 过滤后的统一列表 -->
+                <div class="card" style="border: 1px solid #e5e7eb;">
+                    <div class="card-body">
+                        <div v-if="historyDetail.items && historyDetail.items.length > 0" style="display: grid; gap: 0.75rem;">
+                            <div v-for="(item, idx) in historyDetail.items" :key="idx"
+                                style="display: flex; gap: 1rem; padding: 0.75rem; border-radius: 0.375rem; background: #f9fafb; transition: all 0.2s;"
+                                @mouseenter="$event.currentTarget.style.background='#f3f4f6'"
+                                @mouseleave="$event.currentTarget.style.background='#f9fafb'">
+                                <span style="font-weight: 700; color: #2563eb; min-width: 2.5rem; font-size: 1.125rem;">{{ idx + 1 }}</span>
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                                         <a v-if="item.url" :href="item.url" target="_blank" 
-                                            style="color: #2563eb; text-decoration: none; hover:text-decoration: underline;">
+                                            style="color: #111827; text-decoration: none; font-weight: 500; font-size: 1rem; flex: 1;"
+                                            @mouseenter="$event.target.style.color='#2563eb'"
+                                            @mouseleave="$event.target.style.color='#111827'">
                                             {{ item.title }}
                                         </a>
-                                        <span v-else style="color: #111827;">{{ item.title }}</span>
+                                        <span v-else style="color: #111827; font-weight: 500; font-size: 1rem; flex: 1;">{{ item.title }}</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; color: #6b7280;">
+                                        <span style="background: #e0e7ff; color: #4338ca; padding: 0.125rem 0.5rem; border-radius: 0.25rem;">
+                                            {{ getPlatformName(item.source_id) }}
+                                        </span>
+                                        <span v-if="item.ranks && item.ranks.length > 0">
+                                            原榜单 #{{ item.ranks[0] }}
+                                        </span>
                                     </div>
                                 </div>
-                                <div v-if="items.length > 20" style="text-align: center; padding: 0.5rem; color: #6b7280; font-size: 0.875rem;">
-                                    仅显示前20条，共 {{ items.length }} 条数据
-                                </div>
                             </div>
+                        </div>
+                        <div v-else class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                </path>
+                            </svg>
+                            <p>暂无符合条件的数据</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+                    </div>
+                </div>
+            </div>
 
             <!-- 系统配置 -->
             <div v-show="currentTab === 'config'">
@@ -620,16 +624,16 @@
                         <div style="display: flex; gap: 0.75rem;">
                             <button @click="toggleConfigMode" class="btn btn-sm btn-secondary">
                                 {{ isRawConfig ? '表单模式' : '源码模式' }}
-                            </button>
+                        </button>
                             <button @click="saveConfig" class="btn btn-sm btn-primary">
                                 <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
                                 </svg>
-                                保存配置
-                            </button>
-                            </div>
-                            </div>
+                            保存配置
+                        </button>
+                    </div>
+                </div>
                     <div class="card-body" style="max-height: calc(100vh - 280px); overflow-y: auto;">
                         <!-- 表单模式 -->
                         <div v-if="!isRawConfig && configObj" style="display: flex; flex-direction: column; gap: 1.5rem;">
@@ -646,17 +650,17 @@
                                 </div>
                                 <div class="form-grid">
                                     <div class="col-span-8">
-                                        <label class="form-label">版本检查 URL</label>
+                                <label class="form-label">版本检查 URL</label>
                                         <input type="text" v-model="configObj.app.version_check_url" class="form-control"
                                             placeholder="https://api.github.com/...">
-                                        </div>
+                            </div>
                                     <div class="col-span-4">
                                         <label class="form-label">版本更新提示</label>
                                         <div class="form-check">
                                             <input type="checkbox" v-model="configObj.app.show_version_update" id="show-version">
                                             <label for="show-version">启用版本更新提示</label>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
                                 </div>
                                 </div>
 
@@ -669,27 +673,27 @@
                                         </path>
                                     </svg>
                                     爬虫配置
-                                </div>
+                            </div>
                                 <div class="form-grid">
                                     <div class="col-span-3">
                                         <label class="form-label">启用爬虫功能</label>
                                         <div class="form-check">
                                             <input type="checkbox" v-model="configObj.crawler.enable_crawler" id="enable-crawler">
                                             <label for="enable-crawler">启用爬取功能</label>
-                                        </div>
-                                    </div>
+                            </div>
+                            </div>
                                     <div class="col-span-3">
                                         <label class="form-label">请求间隔（毫秒）</label>
                                         <input type="number" v-model.number="configObj.crawler.request_interval" class="form-control" min="100"
                                             step="100">
                                         <div class="help-text">建议不低于 1000ms，避免请求过快</div>
-                                    </div>
+                            </div>
                                     <div class="col-span-3">
                                         <label class="form-label">使用代理</label>
                                         <div class="form-check">
                                             <input type="checkbox" v-model="configObj.crawler.use_proxy" id="use-proxy">
                                             <label for="use-proxy">启用HTTP代理</label>
-                                        </div>
+                        </div>
                                     </div>
                                     <div class="col-span-12" v-if="configObj.crawler.use_proxy">
                                         <label class="form-label">代理服务器地址</label>
@@ -716,14 +720,14 @@
                                             <option value="daily">当日汇总模式 (daily) - 按时推送当日所有匹配新闻</option>
                                             <option value="current">当前榜单模式 (current) - 按时推送当前榜单匹配新闻</option>
                                             <option value="incremental">增量监控模式 (incremental) - 仅推送新增内容</option>
-                                        </select>
-                                    </div>
+                                </select>
+                            </div>
                                     <div class="col-span-6">
                                         <label class="form-label">排名高亮阈值</label>
                                         <input type="number" v-model.number="configObj.report.rank_threshold" class="form-control" min="1" step="1">
                                         <div class="help-text">排名小于等于此值的新闻将高亮显示</div>
-                                    </div>
-                                    </div>
+                            </div>
+                        </div>
                                     </div>
                                     
                                     <!-- 通知设置 -->
@@ -742,8 +746,8 @@
                                                     <input type="checkbox" v-model="configObj.notification.enable_notification" id="enable-notif">
                                                     <label for="enable-notif">启用通知推送功能</label>
                                                 </div>
-                                            </div>
-                                    
+                            </div>
+
                                     <template v-if="configObj.notification.enable_notification">
                                         <!-- 推送时间窗口 -->
                                         <div class="col-span-12"
@@ -763,15 +767,15 @@
                                                         <input type="checkbox" v-model="configObj.notification.push_window.enabled"
                                                             id="push-window-enabled">
                                                         <label for="push-window-enabled">启用推送时间窗口控制</label>
-                                                    </div>
+                                        </div>
                                                     <div class="help-text">限制推送的时间范围，避免非工作时间打扰</div>
-                                                </div>
+                                        </div>
                                                 <template v-if="configObj.notification.push_window.enabled">
                                                     <div class="col-span-4">
                                                         <label class="form-label">开始时间</label>
                                                         <input type="time" v-model="configObj.notification.push_window.time_range.start"
                                                             class="form-control">
-                                                    </div>
+                                        </div>
                                                     <div class="col-span-4">
                                                         <label class="form-label">结束时间</label>
                                                         <input type="time" v-model="configObj.notification.push_window.time_range.end" class="form-control">
@@ -823,15 +827,15 @@
                                                         placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
                                                 </div>
                                                 <div class="col-span-3">
-                                                    <label class="form-label">Telegram Bot Token</label>
+                                                <label class="form-label">Telegram Bot Token</label>
                                                     <input type="text" v-model="configObj.notification.webhooks.telegram_bot_token" class="form-control"
                                                         placeholder="123456789:AAH...">
-                                                    </div>
+                                            </div>
                                                 <div class="col-span-3">
-                                                    <label class="form-label">Telegram Chat ID</label>
+                                                <label class="form-label">Telegram Chat ID</label>
                                                     <input type="text" v-model="configObj.notification.webhooks.telegram_chat_id" class="form-control"
                                                         placeholder="-1001234567890">
-                                                    </div>
+                                            </div>
                                                 <div class="col-span-3">
                                                     <label class="form-label">Bark Server URL</label>
                                                     <input type="text" v-model="configObj.notification.webhooks.bark_server_url" class="form-control"
@@ -843,10 +847,10 @@
                                                     <input type="text" v-model="configObj.notification.webhooks.bark_device_key" class="form-control"
                                                         placeholder="你的设备密钥">
                                                     <div class="help-text">在 Bark App 中查看</div>
-                                                    </div>
-                                                    </div>
-                                                    </div>
-                                                    
+                                        </div>
+                                    </div>
+                                </div>
+
                                                     <!-- 邮件通知 -->
                                                     <div class="col-span-12"
                                                         style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
@@ -862,33 +866,33 @@
                                                         </h4>
                                                         <div class="form-grid">
                                                             <div class="col-span-4">
-                                                                <label class="form-label">发件人邮箱</label>
+                                            <label class="form-label">发件人邮箱</label>
                                                                 <input type="email" v-model="configObj.notification.webhooks.email_from" class="form-control"
                                                                     placeholder="sender@example.com">
-                                                            </div>
+                                        </div>
                                                             <div class="col-span-4">
                                                                 <label class="form-label">邮箱密码/授权码</label>
                                                                 <input type="password" v-model="configObj.notification.webhooks.email_password" class="form-control"
                                                                     placeholder="••••••••">
-                                                            </div>
+                                        </div>
                                                             <div class="col-span-4">
                                                                 <label class="form-label">收件人邮箱</label>
                                                                 <input type="text" v-model="configObj.notification.webhooks.email_to" class="form-control"
                                                                     placeholder="user1@example.com, user2@example.com">
                                                                 <div class="help-text">多个收件人用逗号分隔</div>
-                                                            </div>
+                                        </div>
                                                             <div class="col-span-6">
                                                                 <label class="form-label">SMTP 服务器地址 <span style="color: #9ca3af; font-weight: 400;">(可选)</span></label>
                                                                 <input type="text" v-model="configObj.notification.webhooks.email_smtp_server" class="form-control"
                                                                     placeholder="留空自动识别">
-                                                            </div>
+                                    </div>
                                                             <div class="col-span-6">
                                                                 <label class="form-label">SMTP 端口 <span style="color: #9ca3af; font-weight: 400;">(可选)</span></label>
                                                                 <input type="text" v-model="configObj.notification.webhooks.email_smtp_port" class="form-control"
                                                                     placeholder="留空自动识别">
-                                                            </div>
-                                                        </div>
-                                                    </div>
+                                </div>
+                            </div>
+                        </div>
                                                     
                                                     <!-- Ntfy 通知 -->
                                                     <div class="col-span-12"
@@ -908,23 +912,23 @@
                                                                 <label class="form-label">Ntfy 服务器地址</label>
                                                                 <input type="text" v-model="configObj.notification.webhooks.ntfy_server_url" class="form-control"
                                                                     placeholder="https://ntfy.sh">
-                                                            </div>
+                            </div>
                                                             <div class="col-span-3">
                                                                 <label class="form-label">主题名称</label>
                                                                 <input type="text" v-model="configObj.notification.webhooks.ntfy_topic" class="form-control"
                                                                     placeholder="my-topic">
-                                                            </div>
+                            </div>
                                                             <div class="col-span-3">
                                                                 <label class="form-label">访问令牌 <span style="color: #9ca3af; font-weight: 400;">(可选)</span></label>
                                                                 <input type="text" v-model="configObj.notification.webhooks.ntfy_token" class="form-control"
                                                                     placeholder="tk_...">
-                                                            </div>
-                                                        </div>
+                            </div>
+                        </div>
                                                     </div>
                                                     </template>
                                                     </div>
-                                                    </div>
-                                                    
+                </div>
+
                                                     <!-- 权重算法 -->
                                                     <div class="section">
                                                         <div class="section-title">
@@ -969,7 +973,7 @@
                                         <div class="help-text">热度数值越高权重越高</div>
                                     </div>
                                     </div>
-                                    </div>
+            </div>
 
                         </div>
 <!-- 源码模式 -->
@@ -1006,7 +1010,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
                                 添加平台
-                            </button>
+                        </button>
                             </div>
                             <div class="card-body">
                                 <div v-if="configObj && configObj.platforms && configObj.platforms.length > 0"
@@ -1024,7 +1028,7 @@
                                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
                                                     </path>
                                                 </svg>
-                                            </button>
+                        </button>
                                         </div>
                                         <div style="display: grid; gap: 0.5rem;">
                                             <input type="text" v-model="platform.name" class="form-control" placeholder="平台名称"
@@ -1045,7 +1049,7 @@
                         </div>
                     </div>
                     </div>
-            </div>
+                </div>
 
             <!-- 关键词配置 -->
             <div v-show="currentTab === 'keywords'">
@@ -1106,12 +1110,12 @@
                                         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                                             <span v-for="(word, wIdx) in group.normal" :key="wIdx" class="keyword-tag"
                                                 style="background: #dbeafe; color: #1e40af;">
-                                                {{ word }}
+                                    {{ word }}
                                                 <button @click="removeWord(group.normal, wIdx)" style="color: #1e40af;">×</button>
-                                                </span>
-                                                <input type="text" placeholder="+ 添加普通词" @keydown.enter.prevent="addWord($event, group.normal)" class="keyword-input">
-                                                </div>
-                                                </div>
+                                </span>
+                                <input type="text" placeholder="+ 添加普通词" @keydown.enter.prevent="addWord($event, group.normal)" class="keyword-input">
+                            </div>
+                        </div>
                                     <!-- 必须词 -->
                                     <div>
                                         <label
@@ -1123,14 +1127,14 @@
                                         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                                             <span v-for="(word, wIdx) in group.required" :key="wIdx" class="keyword-tag"
                                                 style="background: #d1fae5; color: #065f46;">
-                                                +{{ word }}
+                                    +{{ word }}
                                                 <button @click="removeWord(group.required, wIdx)" style="color: #065f46;">×</button>
-                                                </span>
-                                                <input type="text" placeholder="+ 添加必须词" @keydown.enter.prevent="addWord($event, group.required)" class="keyword-input">
-                                                </div>
-                                                </div>
+                                </span>
+                                <input type="text" placeholder="+ 添加必须词" @keydown.enter.prevent="addWord($event, group.required)" class="keyword-input">
+                            </div>
+                        </div>
                                     <!-- 过滤词 -->
-                                    <div>
+                        <div>
                                         <label
                                             style="display: flex; align-items: center; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.625rem;">
                                             <span
@@ -1140,26 +1144,26 @@
                                         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                                             <span v-for="(word, wIdx) in group.filters" :key="wIdx" class="keyword-tag"
                                                 style="background: #fee2e2; color: #991b1b;">
-                                                !{{ word }}
+                                    !{{ word }}
                                                 <button @click="removeWord(group.filters, wIdx)" style="color: #991b1b;">×</button>
-                                                </span>
-                                                <input type="text" placeholder="+ 添加过滤词" @keydown.enter.prevent="addWord($event, group.filters)" class="keyword-input">
-                                                </div>
-                                                </div>
-                                                </div>
+                                </span>
+                                <input type="text" placeholder="+ 添加过滤词" @keydown.enter.prevent="addWord($event, group.filters)" class="keyword-input">
                             </div>
-                            
+                        </div>
+                                                </div>
+                    </div>
+
                             <button @click="addKeywordGroup" class="add-group-btn">
                                 <svg style="display: inline-block; width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; vertical-align: middle;"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                                 </svg>
                                 添加新词组
-                            </button>
-                            </div>
+                    </button>
+                </div>
 
                         <!-- 源码模式 -->
-                        <div v-else>
+                <div v-else>
                             <div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
                                 <div style="display: flex; color: #1e40af; font-size: 0.875rem;">
                                     <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; flex-shrink: 0;" fill="none"
@@ -1183,7 +1187,7 @@
                                     spellcheck="false"></textarea>
                                 </div>
                                 </div>
-                                </div>
+                </div>
             </div>
 
             <!-- 推送记录 -->
@@ -1296,10 +1300,10 @@
                 
                 // History State
                 const recentHistories = ref([])
-                const selectedDate = ref('today')
+                const selectedDate = ref('')
                 const historyDetail = ref(null)
-                const currentDataCount = ref(0)
-                let currentDataTimer = null
+                const availableDates = ref([])
+                let autoRefreshTimer = null
                 
                 // Config State
                 const isRawConfig = ref(false)
@@ -1351,15 +1355,15 @@
 
                 const fetchConfig = async () => {
                     try {
-                        const res = await fetch('/api/config')
-                        const data = await res.json()
-                        configYaml.value = data.yaml
-                        if (data.json) {
-                            configObj.value = data.json
-                        } else {
+                    const res = await fetch('/api/config')
+                    const data = await res.json()
+                    configYaml.value = data.yaml
+                    if (data.json) {
+                        configObj.value = data.json
+                    } else {
                             configObj.value = jsyaml.load(data.yaml)
                         }
-                    } catch (e) {
+                        } catch (e) {
                         console.error('获取配置失败:', e)
                         showToast('获取配置失败', 'error')
                     }
@@ -1367,10 +1371,10 @@
 
                 const fetchKeywords = async () => {
                     try {
-                        const res = await fetch('/api/keywords')
-                        const data = await res.json()
-                        keywordsContent.value = data.content
-                        parseKeywords(data.content)
+                    const res = await fetch('/api/keywords')
+                    const data = await res.json()
+                    keywordsContent.value = data.content
+                    parseKeywords(data.content)
                     } catch (e) {
                         console.error('获取关键词失败:', e)
                     }
@@ -1396,7 +1400,7 @@
                             else group.normal.push(line)
                         })
                         if (group.normal.length > 0 || group.required.length > 0 || group.filters.length > 0) {
-                            groups.push(group)
+                        groups.push(group)
                         }
                     })
                     keywordGroups.value = groups
@@ -1462,10 +1466,10 @@
 
                 const toggleConfigMode = () => {
                     if (!isRawConfig.value) {
-                        configYaml.value = jsyaml.dump(configObj.value)
+                            configYaml.value = jsyaml.dump(configObj.value)
                     } else {
                         try {
-                            configObj.value = jsyaml.load(configYaml.value)
+                                configObj.value = jsyaml.load(configYaml.value)
                         } catch (e) {
                             showToast('YAML 格式错误: ' + e.message, 'error')
                             return
@@ -1489,7 +1493,7 @@
 
                 const removeKeywordGroup = (idx) => {
                     if (confirm('确定要删除这个词组吗？')) {
-                        keywordGroups.value.splice(idx, 1)
+                    keywordGroups.value.splice(idx, 1)
                     }
                 }
 
@@ -1546,50 +1550,76 @@
                         if (res.ok) {
                             const data = await res.json()
                             recentHistories.value = data.histories || []
+                            
+                            // 构建可用日期列表（包括今天）
+                            const today = new Date().toISOString().split('T')[0]
+                            availableDates.value = []
+                            
+                            // 添加今天
+                            const todayHistory = recentHistories.value.find(h => h.date === today)
+                            availableDates.value.push({
+                                value: today,
+                                label: '今日',
+                                count: todayHistory ? todayHistory.item_count : 0,
+                                isToday: true
+                            })
+                            
+                            // 添加历史日期
+                            recentHistories.value.forEach(hist => {
+                                if (hist.date !== today) {
+                                    availableDates.value.push({
+                                        value: hist.date,
+                                        label: hist.date,
+                                        count: hist.item_count,
+                                        isToday: false
+                                    })
+                                }
+                            })
+                            
+                            // 默认选择今天
+                            if (!selectedDate.value && availableDates.value.length > 0) {
+                                selectedDate.value = availableDates.value[0].value
+                                await fetchHistoryDetail(selectedDate.value)
+                            }
                         }
                     } catch (e) {
                         console.error('获取历史列表失败:', e)
                     }
                 }
 
-                const fetchCurrentData = async () => {
-                    try {
-                        const res = await fetch('/api/current-data')
-                        if (res.ok) {
-                            const data = await res.json()
-                            historyDetail.value = data
-                            currentDataCount.value = data.item_count || 0
-                            
-                            // 如果选择的是今日，自动刷新
-                            if (selectedDate.value === 'today') {
-                                if (currentDataTimer) clearTimeout(currentDataTimer)
-                                currentDataTimer = setTimeout(fetchCurrentData, 30000) // 30秒后自动刷新
-                            }
-                        }
-                    } catch (e) {
-                        console.error('获取今日数据失败:', e)
-                    }
-                }
-
                 const fetchHistoryDetail = async (date) => {
-                    // 停止今日数据的自动刷新
-                    if (currentDataTimer) {
-                        clearTimeout(currentDataTimer)
-                        currentDataTimer = null
+                    // 停止自动刷新
+                    if (autoRefreshTimer) {
+                        clearTimeout(autoRefreshTimer)
+                        autoRefreshTimer = null
                     }
                     
                     try {
                         const res = await fetch(`/api/crawl-history?date=${date}`)
                         if (res.ok) {
                             historyDetail.value = await res.json()
+                            
+                            // 如果是今天，启动自动刷新
+                            if (isToday(date)) {
+                                autoRefreshTimer = setTimeout(() => fetchHistoryDetail(date), 30000)
+                            }
                         } else {
-                            historyDetail.value = null
-                            showToast(`没有 ${date} 的数据`, 'info')
+                            historyDetail.value = {
+                                date: date,
+                                timestamp: new Date(),
+                                items: [],
+                                item_count: 0
+                            }
                         }
                     } catch (e) {
-                        console.error('获取历史详情失败:', e)
+                        console.error('获取数据失败:', e)
                         historyDetail.value = null
                     }
+                }
+
+                const isToday = (date) => {
+                    const today = new Date().toISOString().split('T')[0]
+                    return date === today
                 }
 
                 const getPlatformName = (platformId) => {
@@ -1677,7 +1707,6 @@
 
                 onMounted(() => {
                     fetchRecentHistory()
-                    fetchCurrentData() // 默认显示今日实时数据
                     fetchStatus()
                     fetchConfig()
                     fetchKeywords()
@@ -1686,7 +1715,7 @@
 
                 onUnmounted(() => {
                     if (pollTimer) clearInterval(pollTimer)
-                    if (currentDataTimer) clearTimeout(currentDataTimer)
+                    if (autoRefreshTimer) clearTimeout(autoRefreshTimer)
                     window.removeEventListener('resize', handleResize)
                 })
 
@@ -1697,11 +1726,11 @@
                     addKeywordGroup, removeKeywordGroup, addWord, removeWord,
                     addPlatform, removePlatform,
                     pushRecords, pushRecordTotal, pushRecordLimit, pushRecordOffset,
-                    recentHistories, selectedDate, historyDetail, currentDataCount,
+                    recentHistories, selectedDate, historyDetail, availableDates,
                     saveConfig, saveKeywords, runTask, clearLog,
                     formatTime, formatDateTime, formatDuration,
                     fetchStatus, fetchPushRecords, prevPushRecordsPage, nextPushRecordsPage,
-                    fetchRecentHistory, fetchHistoryDetail, fetchCurrentData, getPlatformName,
+                    fetchRecentHistory, fetchHistoryDetail, getPlatformName, isToday,
                     showToast
                 }
             }

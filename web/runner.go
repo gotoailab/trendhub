@@ -337,3 +337,27 @@ func (tr *TaskRunner) Run() (string, error) {
 	tr.LastLog = logBuf.String()
 	return tr.LastLog, nil
 }
+
+// FilterAndRankData 对原始数据进行过滤和排序
+func (tr *TaskRunner) FilterAndRankData(rawData map[string][]*model.NewsItem) ([]*model.NewsItem, error) {
+	// 加载配置
+	cfg, err := config.LoadConfig(tr.ConfigPath, tr.KeywordPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// 初始化过滤器和排序器
+	f := filter.NewKeywordFilter(cfg.KeywordGroups, cfg.GlobalFilters)
+	r := rank.NewWeightedRanker(cfg.Config.Weight)
+
+	// 过滤数据
+	filteredData, err := f.Filter(rawData)
+	if err != nil {
+		return nil, fmt.Errorf("filter failed: %w", err)
+	}
+
+	// 排序
+	rankedItems := r.Rank(filteredData)
+
+	return rankedItems, nil
+}

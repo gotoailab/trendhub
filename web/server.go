@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gotoailab/trendhub/config"
+	"github.com/gotoailab/trendhub/internal/model"
 	"gopkg.in/yaml.v3"
 )
 
@@ -27,7 +28,6 @@ func (s *Server) Run(addr string) error {
 	http.HandleFunc("/api/push-records", s.enableCors(s.handlePushRecords))
 	http.HandleFunc("/api/crawl-history", s.enableCors(s.handleCrawlHistory))
 	http.HandleFunc("/api/crawl-history/recent", s.enableCors(s.handleRecentHistory))
-	http.HandleFunc("/api/current-data", s.enableCors(s.handleCurrentData))
 
 	// 静态文件服务
 	// 假设 web/static 在运行目录的相对路径下
@@ -151,7 +151,7 @@ func (s *Server) handleKeywords(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleCrawlHistory 获取指定日期的爬取历史数据
+// handleCrawlHistory 获取指定日期的爬取历史数据（已过滤）
 func (s *Server) handleCrawlHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -169,13 +169,43 @@ func (s *Server) handleCrawlHistory(w http.ResponseWriter, r *http.Request) {
 		date = time.Now().Format("2006-01-02")
 	}
 
+	// 获取原始历史数据
 	history, err := s.Runner.DataCache.GetCrawlHistory(date)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get history for %s: %v", date, err), http.StatusNotFound)
+		// 如果没有历史记录，返回空数据
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"date":       date,
+			"timestamp":  time.Now(),
+			"items":      []interface{}{},
+			"item_count": 0,
+		})
 		return
 	}
 
-	json.NewEncoder(w).Encode(history)
+	// 应用过滤和排序
+	filteredItems, err := s.Runner.FilterAndRankData(history.Data)
+	if err != nil {
+		log.Printf("Failed to filter data: %v", err)
+		// 如果过滤失败，返回未过滤的数据
+		var allItems []*model.NewsItem
+		for _, items := range history.Data {
+			allItems = append(allItems, items...)
+		}
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"date":       history.Date,
+			"timestamp":  history.Timestamp,
+			"items":      allItems,
+			"item_count": len(allItems),
+		})
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"date":       history.Date,
+		"timestamp":  history.Timestamp,
+		"items":      filteredItems,
+		"item_count": len(filteredItems),
+	})
 }
 
 // handleRecentHistory 获取最近7天的抓取历史摘要
@@ -207,34 +237,6 @@ func (s *Server) handleRecentHistory(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// handleCurrentData 获取当天的实时数据
-func (s *Server) handleCurrentData(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if s.Runner.DataCache == nil {
-		http.Error(w, "Data cache not initialized", http.StatusInternalServerError)
-		return
-	}
-
-	// 尝试从今天的历史记录中获取
-	today := time.Now().Format("2006-01-02")
-	history, err := s.Runner.DataCache.GetCrawlHistory(today)
-	if err != nil {
-		// 如果没有今天的历史记录，返回空数据
-		json.NewEncoder(w).Encode(map[string]interface{}{
-			"date":       today,
-			"timestamp":  time.Now(),
-			"data":       map[string]interface{}{},
-			"item_count": 0,
-		})
-		return
-	}
-
-	json.NewEncoder(w).Encode(history)
-}
 
 func (s *Server) handleRun(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
