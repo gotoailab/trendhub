@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gotoailab/trendhub/internal/datacache"
 	"github.com/gotoailab/trendhub/internal/pushdb"
 	"github.com/gotoailab/trendhub/web"
 )
@@ -17,17 +18,25 @@ func main() {
 	keywordPath := flag.String("keywords", "config/frequency_words.txt", "Path to keywords file")
 	webMode := flag.Bool("web", false, "Run in web mode")
 	webAddr := flag.String("addr", ":8080", "Web server address")
-	dbPath := flag.String("db", "data/push_records.db", "Path to push records database")
+	pushDBPath := flag.String("pushdb", "data/push_records.db", "Path to push records database")
+	cacheDBPath := flag.String("cachedb", "data/data_cache.db", "Path to data cache database")
 	flag.Parse()
 
 	// 初始化推送记录数据库
-	db, err := pushdb.NewPushDB(*dbPath)
+	pushDB, err := pushdb.NewPushDB(*pushDBPath)
 	if err != nil {
 		log.Fatalf("Failed to initialize push database: %v", err)
 	}
-	defer db.Close()
+	defer pushDB.Close()
 
-	runner := web.NewTaskRunner(*configPath, *keywordPath, db)
+	// 初始化数据缓存数据库
+	dataCache, err := datacache.NewDataCache(*cacheDBPath)
+	if err != nil {
+		log.Fatalf("Failed to initialize data cache: %v", err)
+	}
+	defer dataCache.Close()
+
+	runner := web.NewTaskRunner(*configPath, *keywordPath, pushDB, dataCache)
 
 	if *webMode {
 		// Web 模式：启动 Web 服务器和定时调度器

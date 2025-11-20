@@ -10,8 +10,11 @@ import (
 	"time"
 
 	"github.com/gotoailab/trendhub/config"
+	"github.com/gotoailab/trendhub/internal/collector"
 	"github.com/gotoailab/trendhub/internal/crawler"
+	"github.com/gotoailab/trendhub/internal/datacache"
 	"github.com/gotoailab/trendhub/internal/filter"
+	"github.com/gotoailab/trendhub/internal/model"
 	"github.com/gotoailab/trendhub/internal/notifier"
 	"github.com/gotoailab/trendhub/internal/pushdb"
 	"github.com/gotoailab/trendhub/internal/rank"
@@ -20,22 +23,25 @@ import (
 
 // TaskRunner 负责执行任务
 type TaskRunner struct {
-	ConfigPath  string
-	KeywordPath string
-	PushDB      *pushdb.PushDB
-	Scheduler   *scheduler.Scheduler
-	mu          sync.Mutex
-	IsRunning   bool
-	LastLog     string
-	LastRunTime time.Time
-	ExtraWriter io.Writer // 额外的日志输出目标（如 os.Stdout）
+	ConfigPath     string
+	KeywordPath    string
+	PushDB         *pushdb.PushDB
+	DataCache      *datacache.DataCache
+	Scheduler      *scheduler.Scheduler
+	DailyCollector *collector.DailyCollector
+	mu             sync.Mutex
+	IsRunning      bool
+	LastLog        string
+	LastRunTime    time.Time
+	ExtraWriter    io.Writer // 额外的日志输出目标（如 os.Stdout）
 }
 
-func NewTaskRunner(configPath, keywordPath string, pushDB *pushdb.PushDB) *TaskRunner {
+func NewTaskRunner(configPath, keywordPath string, pushDB *pushdb.PushDB, dataCache *datacache.DataCache) *TaskRunner {
 	return &TaskRunner{
 		ConfigPath:  configPath,
 		KeywordPath: keywordPath,
 		PushDB:      pushDB,
+		DataCache:   dataCache,
 	}
 }
 
@@ -46,22 +52,26 @@ func (tr *TaskRunner) StartScheduler(ctx context.Context) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
+	// 如果是 daily 模式，启动持续收集器
+	if cfg.Config.Report.Mode == "daily" {
+		tr.DailyCollector = collector.NewDailyCollector(cfg.Config, tr.DataCache)
+		tr.DailyCollector.Start(ctx)
+		log.Println("Daily mode: continuous data collection started")
+	}
+
 	if !cfg.Config.Notification.PushWindow.Enabled {
 		log.Println("Push window disabled, scheduler will not start")
+		// 即使不启用定时推送，daily 收集器也会运行
 		return nil
 	}
 
 	// 创建任务函数
 	taskFunc := func() (int, error) {
-		logOutput, err := tr.Run()
+		itemCount, err := tr.RunWithCount()
 		if err != nil {
 			return 0, err
 		}
-		
-		// 解析日志以获取推送的条目数（简化版）
-		// 实际实现中可以从 Run() 返回更详细的信息
-		log.Println(logOutput)
-		return 0, nil
+		return itemCount, nil
 	}
 
 	tr.Scheduler = scheduler.NewScheduler(&cfg.Config.Notification, tr.PushDB, taskFunc)
@@ -73,6 +83,21 @@ func (tr *TaskRunner) StopScheduler() {
 	if tr.Scheduler != nil {
 		tr.Scheduler.Stop()
 	}
+	if tr.DailyCollector != nil {
+		tr.DailyCollector.Stop()
+	}
+}
+
+// RunWithCount 执行任务并返回推送数量
+func (tr *TaskRunner) RunWithCount() (int, error) {
+	logOutput, err := tr.Run()
+	if err != nil {
+		return 0, err
+	}
+	
+	// 这里简化处理，实际可以从日志中解析数量
+	_ = logOutput
+	return 0, nil
 }
 
 func (tr *TaskRunner) Run() (string, error) {
@@ -108,29 +133,92 @@ func (tr *TaskRunner) Run() (string, error) {
 		tr.LastLog = logBuf.String()
 		return tr.LastLog, err
 	}
-	logger.Printf("Config loaded. Platforms: %d, Keywords Groups: %d\n", len(cfg.Config.Platforms), len(cfg.KeywordGroups))
+	logger.Printf("Config loaded. Mode: %s, Platforms: %d, Keywords Groups: %d\n", 
+		cfg.Config.Report.Mode, len(cfg.Config.Platforms), len(cfg.KeywordGroups))
 
 	// 2. 初始化模块
-	c := crawler.NewNewsNowCrawler(cfg.Config)
 	f := filter.NewKeywordFilter(cfg.KeywordGroups, cfg.GlobalFilters)
 	r := rank.NewWeightedRanker(cfg.Config.Weight)
 	n := notifier.NewNotificationManager(cfg.Config)
 
-	// 3. 执行任务
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	logger.Println("Start crawling...")
-	data, err := c.Run(ctx)
-	if err != nil {
-		errMsg := fmt.Sprintf("Crawler failed: %v", err)
-		logger.Println(errMsg)
-		tr.LastLog = logBuf.String()
-		return tr.LastLog, err
-	}
-	logger.Printf("Crawled data from %d platforms", len(data))
+	var rawData map[string][]*model.NewsItem
 
-	filteredData, err := f.Filter(data)
+	// 3. 根据模式获取数据
+	switch cfg.Config.Report.Mode {
+	case "daily":
+		// 当日汇总模式：使用缓存的数据
+		logger.Println("Mode: Daily aggregation - using cached data")
+		if tr.DataCache == nil {
+			errMsg := "Data cache not initialized for daily mode"
+			logger.Println(errMsg)
+			tr.LastLog = logBuf.String()
+			return tr.LastLog, fmt.Errorf(errMsg)
+		}
+
+		cachedItems := tr.DataCache.GetDailyCache()
+		logger.Printf("Retrieved %d items from daily cache", len(cachedItems))
+
+		// 将缓存数据转换为按平台分组的格式
+		rawData = make(map[string][]*model.NewsItem)
+		for _, item := range cachedItems {
+			rawData[item.SourceID] = append(rawData[item.SourceID], item)
+		}
+
+	case "incremental":
+		// 增量监控模式：爬取当前数据，过滤已推送的
+		logger.Println("Mode: Incremental monitoring - fetching and filtering new items")
+		if tr.DataCache == nil {
+			errMsg := "Data cache not initialized for incremental mode"
+			logger.Println(errMsg)
+			tr.LastLog = logBuf.String()
+			return tr.LastLog, fmt.Errorf(errMsg)
+		}
+
+		c := crawler.NewNewsNowCrawler(cfg.Config)
+		data, err := c.Run(ctx)
+		if err != nil {
+			errMsg := fmt.Sprintf("Crawler failed: %v", err)
+			logger.Println(errMsg)
+			tr.LastLog = logBuf.String()
+			return tr.LastLog, err
+		}
+		logger.Printf("Crawled data from %d platforms", len(data))
+
+		// 过滤出未推送的内容
+		rawData = make(map[string][]*model.NewsItem)
+		totalItems := 0
+		newItems := 0
+		for platform, items := range data {
+			totalItems += len(items)
+			unpushed := tr.DataCache.FilterUnpushed(items)
+			if len(unpushed) > 0 {
+				rawData[platform] = unpushed
+				newItems += len(unpushed)
+			}
+		}
+		logger.Printf("Found %d new items (total: %d, already pushed: %d)", 
+			newItems, totalItems, totalItems-newItems)
+
+	default: // "current" 或其他
+		// 当前榜单模式（默认）：实时爬取
+		logger.Println("Mode: Current ranking - fetching real-time data")
+		c := crawler.NewNewsNowCrawler(cfg.Config)
+		data, err := c.Run(ctx)
+		if err != nil {
+			errMsg := fmt.Sprintf("Crawler failed: %v", err)
+			logger.Println(errMsg)
+			tr.LastLog = logBuf.String()
+			return tr.LastLog, err
+		}
+		logger.Printf("Crawled data from %d platforms", len(data))
+		rawData = data
+	}
+
+	// 4. 关键词过滤
+	filteredData, err := f.Filter(rawData)
 	if err != nil {
 		errMsg := fmt.Sprintf("Filter failed: %v", err)
 		logger.Println(errMsg)
@@ -144,12 +232,34 @@ func (tr *TaskRunner) Run() (string, error) {
 	}
 	logger.Printf("Filtered data: %d items remaining", totalItems)
 
+	if totalItems == 0 {
+		logger.Println("No matching items found, skipping notification")
+		tr.LastLog = logBuf.String()
+		return tr.LastLog, nil
+	}
+
+	// 5. 排序
 	rankedItems := r.Rank(filteredData)
 
+	// 6. 推送通知
 	if cfg.Config.Notification.EnableNotification {
-		logger.Println("Sending notifications...")
+		logger.Printf("Sending notifications for %d items...", len(rankedItems))
 		n.SendAll(ctx, rankedItems)
 		logger.Println("Notification sent")
+
+		// 7. 增量模式下标记已推送
+		if cfg.Config.Report.Mode == "incremental" && tr.DataCache != nil {
+			if err := tr.DataCache.MarkAsPushed(rankedItems); err != nil {
+				logger.Printf("Warning: Failed to mark items as pushed: %v", err)
+			} else {
+				logger.Printf("Marked %d items as pushed", len(rankedItems))
+			}
+
+			// 清理过期记录
+			if deleted, err := tr.DataCache.CleanExpiredRecords(); err == nil && deleted > 0 {
+				logger.Printf("Cleaned %d expired push records", deleted)
+			}
+		}
 	} else {
 		logger.Println("Notification disabled")
 	}

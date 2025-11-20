@@ -1,0 +1,67 @@
+# 增量监控模式 (incremental) 测试配置
+# 适用场景: 长期跟踪特定话题，只推送新内容
+
+app:
+    show_version_update: false
+    version_check_url: https://raw.githubusercontent.com/sansan0/TrendRadar/refs/heads/master/version
+
+crawler:
+    enable_crawler: true
+    request_interval: 1000       # 请求间隔1秒
+    use_proxy: false
+    default_proxy: http://127.0.0.1:10086
+
+notification:
+    enable_notification: true
+    batch_send_interval: 3
+    message_batch_size: 4000
+    feishu_batch_size: 29000
+    dingtalk_batch_size: 20000
+    feishu_message_separator: ━━━━━━━━━━━━━━━━━━━
+    
+    # 定时推送窗口
+    push_window:
+        enabled: false            # 可以关闭定时推送，手动测试
+        once_per_day: false      # 发现新内容就推
+        push_record_retention_days: 7
+        time_range:
+            start: "08:00"
+            end: "22:00"
+    
+    # 推送渠道配置
+    webhooks:
+        feishu_url: ""
+        dingtalk_url: ""
+        wework_url: ""
+        telegram_bot_token: ""
+        telegram_chat_id: ""
+        bark_server_url: "https://api.day.app"
+        bark_device_key: ""        # 填入你的 Bark 设备密钥测试
+        ntfy_server_url: "https://ntfy.sh"
+        ntfy_topic: ""
+        ntfy_token: ""
+        email_smtp_server: ""
+        email_smtp_port: ""
+        email_from: ""
+        email_password: ""
+        email_to: ""
+
+platforms:
+    - id: weibo
+      name: 微博
+    - id: zhihu
+      name: 知乎
+    - id: baidu
+      name: 百度热搜
+    - id: toutiao
+      name: 今日头条
+
+report:
+    mode: incremental            # 增量监控模式
+    rank_threshold: 20           # 监控前20名
+
+weight:
+    rank_weight: 0.6
+    frequency_weight: 0.3
+    hotness_weight: 0.1
+
