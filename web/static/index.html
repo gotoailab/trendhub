@@ -8,83 +8,222 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body { 
-            background-color: #f3f4f6; 
+            background: linear-gradient(135deg, #ffffff 0%, #6f63c3 100%);
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            min-height: 100vh;
         }
         
-        /* 统一输入框样式 */
-        input[type="text"], 
-        input[type="number"], 
-        input[type="password"],
-        select, 
-        textarea {
+        /* 卡片容器 */
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(to right, #f9fafb, #ffffff);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* 表单元素统一样式 */
+        .form-control {
             display: block;
             width: 100%;
-            padding: 0.625rem 0.75rem;
+            padding: 0.75rem 1rem;
             font-size: 0.875rem;
             line-height: 1.5;
             color: #374151;
             background-color: #fff;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
         }
         
-        input[type="text"]:focus, 
-        input[type="number"]:focus,
-        input[type="password"]:focus,
-        select:focus, 
-        textarea:focus {
+        .form-control:focus {
             outline: none;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
-        input[type="checkbox"] {
-            width: 1rem;
-            height: 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.25rem;
-            color: #6366f1;
-            cursor: pointer;
+        .form-control:disabled {
+            background-color: #f3f4f6;
+            color: #9ca3af;
+            cursor: not-allowed;
         }
         
-        input[type="checkbox"]:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        /* 表单网格 */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 1.5rem;
         }
+        
+        @media (max-width: 768px) {
+            .form-grid { gap: 1rem; }
+            .col-span-1, .col-span-2, .col-span-3, .col-span-4, 
+            .col-span-6, .col-span-8, .col-span-12 { grid-column: span 12; }
+        }
+        
+        .col-span-1 { grid-column: span 1; }
+        .col-span-2 { grid-column: span 2; }
+        .col-span-3 { grid-column: span 3; }
+        .col-span-4 { grid-column: span 4; }
+        .col-span-6 { grid-column: span 6; }
+        .col-span-8 { grid-column: span 8; }
+        .col-span-12 { grid-column: span 12; }
         
         /* 表单标签 */
         .form-label {
             display: block;
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
-            font-weight: 500;
+            font-weight: 600;
             color: #374151;
         }
         
-        /* 表单组 */
-        .form-group {
-            margin-bottom: 1.5rem;
+        .form-label-required::after {
+            content: "*";
+            color: #ef4444;
+            margin-left: 0.25rem;
         }
         
-        /* Fieldset 样式 */
-        fieldset {
+        /* Checkbox & Radio */
+        .form-check {
+            display: flex;
+            align-items: center;
+            min-height: 2.5rem;
+        }
+        
+        .form-check input[type="checkbox"],
+        .form-check input[type="radio"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin: 0;
+            margin-right: 0.75rem;
+            border: 2px solid #d1d5db;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        
+        .form-check label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        /* Section */
+        .section {
+            background: #f9fafb;
             border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
+            border-radius: 0.75rem;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
         
-        fieldset legend {
-            padding: 0 0.5rem;
+        .section-title {
+            display: flex;
+            align-items: center;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 700;
             color: #111827;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #667eea;
         }
         
-        /* 关键词标签样式优化 */
+        .section-title svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.625rem;
+            color: #667eea;
+        }
+        
+        /* 按钮 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 12px -1px rgba(102, 126, 234, 0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+        
+        .btn-secondary:hover { background: #f3f4f6; }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-danger:hover { background: #dc2626; }
+        
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8125rem;
+        }
+        
+        /* 导航标签 */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-item {
+            padding: 0.875rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            top: 2px;
+        }
+        
+        .tab-item:hover { color: #667eea; }
+        .tab-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        /* 关键词标签 */
         .keyword-tag {
             display: inline-flex;
             align-items: center;
@@ -92,408 +231,889 @@
             font-size: 0.875rem;
             font-weight: 500;
             border-radius: 9999px;
-            cursor: default;
             transition: all 0.2s;
-        }
-        
-        .keyword-tag:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .keyword-tag button {
             margin-left: 0.5rem;
             font-size: 1.125rem;
-            font-weight: 600;
             line-height: 1;
             cursor: pointer;
-            transition: transform 0.2s;
+            background: none;
+            border: none;
+            padding: 0;
         }
         
-        .keyword-tag button:hover {
-            transform: scale(1.2);
-        }
-        
-        /* 关键词输入框 */
         .keyword-input {
             display: inline-block;
-            width: 140px;
-            padding: 0.5rem 0.75rem;
+            min-width: 150px;
+            padding: 0.5rem 0.875rem;
             font-size: 0.875rem;
             background-color: transparent;
-            border: 1px dashed #d1d5db;
+            border: 2px dashed #d1d5db;
             border-radius: 9999px;
             transition: all 0.2s;
         }
         
         .keyword-input:focus {
             outline: none;
-            border-color: #6366f1;
+            border-color: #667eea;
             border-style: solid;
             background-color: #fff;
         }
         
-        .keyword-input::placeholder {
-            color: #9ca3af;
-        }
-        
-        /* 关键词组容器 */
-        .keyword-group {
-            position: relative;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            padding: 1.25rem;
-            background-color: #f9fafb;
-            margin-bottom: 1rem;
+        /* 平台卡片 */
+        .platform-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1rem;
             transition: all 0.2s;
         }
         
-        .keyword-group:hover {
-            border-color: #d1d5db;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        .platform-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
-        .keyword-section-label {
-            display: block;
-            margin-bottom: 0.75rem;
+        /* 状态徽章 */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.375rem 0.75rem;
             font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-weight: 600;
+            border-radius: 9999px;
+        }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        /* 日志区域 */
+        .log-container {
+            background: #1f2937;
+            color: #f9fafb;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .log-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .log-container::-webkit-scrollbar-track {
+            background: #374151;
+            border-radius: 4px;
+        }
+        
+        .log-container::-webkit-scrollbar-thumb {
+            background: #6b7280;
+            border-radius: 4px;
+        }
+        
+        /* 帮助文本 */
+        .help-text {
+            margin-top: 0.5rem;
+            font-size: 0.8125rem;
             color: #6b7280;
         }
         
-        /* 按钮样式 */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem 1rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            border-radius: 0.375rem;
-            transition: all 0.2s;
-            cursor: pointer;
+        /* 动画 */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
         
-        .btn:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        .animate-spin {
+            animation: spin 1s linear infinite;
         }
         
-        /* 网格对齐优化 */
-        .grid-cols-1 {
-            grid-template-columns: repeat(1, minmax(0, 1fr));
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #9ca3af;
         }
         
-        @media (min-width: 640px) {
-            .sm\:grid-cols-2 {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-            .sm\:grid-cols-3 {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-            .sm\:grid-cols-6 {
-                grid-template-columns: repeat(6, minmax(0, 1fr));
-            }
+        .empty-state svg {
+            width: 4rem;
+            height: 4rem;
+            margin: 0 auto 1rem;
+            opacity: 0.5;
+        }
+        
+        /* Toast 通知 */
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <div id="app" class="min-h-screen flex flex-col">
-        <!-- Navbar -->
-        <nav class="bg-white shadow-md">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between h-16">
-                    <div class="flex">
-                        <div class="flex-shrink-0 flex items-center">
-                            <span class="text-xl font-bold text-indigo-600">TrendHub</span>
-                        </div>
-                        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                            <a href="#" @click.prevent="currentTab = 'dashboard'" :class="tabClass('dashboard')" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Dashboard</a>
-                            <a href="#" @click.prevent="currentTab = 'config'" :class="tabClass('config')" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">配置管理</a>
-                            <a href="#" @click.prevent="currentTab = 'keywords'" :class="tabClass('keywords')" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">关键词管理</a>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <span v-if="status.isRunning" class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                            运行中
-                        </span>
-                        <span v-else class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                            空闲
-                        </span>
+    <div id="app">
+        <!-- 顶部导航栏 -->
+        <nav
+            style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); position: sticky; top: 0; z-index: 100;">
+            <div
+                style="max-width: 1400px; margin: 0 auto; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <svg style="width: 2.5rem; height: 2.5rem; color: #667eea;" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                    <div>
+                        <h1
+                            style="font-size: 1.5rem; font-weight: 800; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                            TrendHub</h1>
+                        <p style="font-size: 0.75rem; color: #6b7280;">热点趋势监控管理平台</p>
                     </div>
                 </div>
-            </div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="text-align: right; margin-right: 0.5rem; display: none;"
+                        :style="{display: windowWidth > 640 ? 'block' : 'none'}">
+                        <div style="font-size: 0.75rem; color: #6b7280;">上次运行</div>
+                        <div style="font-size: 0.8125rem; font-weight: 600; color: #374151;">{{ formatTime(status.lastRunTime) }}</div>
+                    </div>
+                    <span v-if="status.isRunning" class="badge badge-success" style="gap: 0.5rem;">
+                        <span
+                            style="width: 0.5rem; height: 0.5rem; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></span>
+                        运行中
+                    </span>
+                    <span v-else class="badge badge-info">
+                        空闲中
+                    </span>
+                    </div>
+                    </div>
         </nav>
 
-        <!-- Content -->
-        <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 主容器 -->
+        <div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
             
-            <!-- Dashboard -->
-            <div v-if="currentTab === 'dashboard'" class="space-y-6">
-                <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-                    <div class="md:grid md:grid-cols-3 md:gap-6">
-                        <div class="md:col-span-1">
-                            <h3 class="text-lg font-medium leading-6 text-gray-900">任务控制</h3>
-                            <p class="mt-1 text-sm text-gray-500">手动触发一次爬取任务。</p>
-                        </div>
-                        <div class="mt-5 md:mt-0 md:col-span-2 flex items-center space-x-4">
-                            <button @click="runTask" :disabled="status.isRunning" 
-                                class="btn text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span v-if="status.isRunning">运行中...</span>
-                                <span v-else>立即运行</span>
-                            </button>
-                            <div class="text-sm text-gray-500">
-                                上次运行: {{ formatTime(status.lastRunTime) }}
-                            </div>
-                        </div>
+            <!-- 标签导航 -->
+            <div class="tabs">
+                <button class="tab-item" :class="{active: currentTab === 'dashboard'}" @click="currentTab = 'dashboard'">
+                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
+                        </path>
+                    </svg>
+                    仪表盘
+                </button>
+                <button class="tab-item" :class="{active: currentTab === 'config'}" @click="currentTab = 'config'">
+                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                        </path>
+                    </svg>
+                    系统配置
+                </button>
+                <button class="tab-item" :class="{active: currentTab === 'platforms'}" @click="currentTab = 'platforms'">
+                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                    平台管理
+                </button>
+                <button class="tab-item" :class="{active: currentTab === 'keywords'}" @click="currentTab = 'keywords'">
+                    <svg style="display: inline-block; width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; vertical-align: middle;"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                        </path>
+                    </svg>
+                    关键词配置
+                </button>
+                </div>
+<!-- 仪表盘 -->
+<div v-show="currentTab === 'dashboard'" style="display: grid; gap: 1.5rem;">
+    <!-- 快速操作 -->
+    <div class="card">
+        <div class="card-header">
+            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">快速操作</h2>
+                    </div>
+                    <div class="card-body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                        <button @click="runTask" :disabled="status.isRunning" class="btn btn-primary" style="height: 4rem;">
+                            <svg v-if="status.isRunning" class="animate-spin"
+                                style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem;" fill="none" viewBox="0 0 24 24">
+                                <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path style="opacity: 0.75;" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            <svg v-else style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem;" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
+                                </path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            {{ status.isRunning ? '正在运行中...' : '立即运行任务' }}
+                        </button>
+                        <button @click="fetchStatus" class="btn btn-secondary" style="height: 4rem;">
+                            <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem;" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                                </path>
+                            </svg>
+                            刷新状态
+                        </button>
                     </div>
                 </div>
 
-                <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">任务日志</h3>
-                    <div class="bg-gray-900 text-gray-100 p-4 rounded-md font-mono text-sm h-96 overflow-y-auto whitespace-pre-wrap">
-                        {{ status.lastLog || '暂无日志' }}
+                <!-- 任务日志 -->
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">运行日志</h2>
+                        <button @click="clearLog" class="btn btn-sm btn-secondary">清空日志</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="log-container" v-if="status.lastLog">
+                            <pre style="margin: 0; white-space: pre-wrap; word-wrap: break-word;">{{ status.lastLog }}</pre>
+                        </div>
+                        <div v-else class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
+                            </svg>
+                            <p>暂无日志记录</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Config Editor (Form Based) -->
-            <div v-if="currentTab === 'config'" class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-                <div class="flex justify-between items-center mb-6 pb-4 border-b">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">系统配置</h3>
-                    <div class="flex space-x-3">
-                        <button @click="toggleConfigMode" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">
-                            切换到{{ isRawConfig ? '表单' : '源码' }}模式
-                        </button>
-                        <button @click="saveConfig" class="btn text-white bg-indigo-600 hover:bg-indigo-700">
-                            保存配置
-                        </button>
-                    </div>
-                </div>
-
-                <div v-if="!isRawConfig && configObj" class="space-y-6 overflow-y-auto max-h-[70vh] pr-2">
-                    <!-- App Config -->
-                    <fieldset>
-                        <legend>基础设置 (App)</legend>
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-6">
-                            <div class="sm:col-span-4">
-                                <label class="form-label">版本检查 URL</label>
-                                <input type="text" v-model="configObj.app.version_check_url">
-                            </div>
-                            <div class="sm:col-span-2 flex items-end pb-2">
-                                <label class="inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" v-model="configObj.app.show_version_update" class="mr-2">
-                                    <span class="text-sm font-medium text-gray-700">显示更新提示</span>
-                                </label>
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <!-- Crawler Config -->
-                    <fieldset>
-                        <legend>爬虫设置 (Crawler)</legend>
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-6">
-                            <div class="sm:col-span-2">
-                                <label class="form-label">请求间隔 (ms)</label>
-                                <input type="number" v-model.number="configObj.crawler.request_interval">
-                            </div>
-                            <div class="sm:col-span-2 flex items-end pb-2">
-                                <label class="inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" v-model="configObj.crawler.enable_crawler" class="mr-2">
-                                    <span class="text-sm font-medium text-gray-700">启用爬虫</span>
-                                </label>
-                            </div>
-                            <div class="sm:col-span-2 flex items-end pb-2">
-                                <label class="inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" v-model="configObj.crawler.use_proxy" class="mr-2">
-                                    <span class="text-sm font-medium text-gray-700">启用代理</span>
-                                </label>
-                            </div>
-                            <div class="sm:col-span-6" v-if="configObj.crawler.use_proxy">
-                                <label class="form-label">代理地址</label>
-                                <input type="text" v-model="configObj.crawler.default_proxy" placeholder="http://127.0.0.1:10086">
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <!-- Report Config -->
-                    <fieldset>
-                        <legend>报告设置 (Report)</legend>
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                            <div>
-                                <label class="form-label">模式</label>
-                                <select v-model="configObj.report.mode">
-                                    <option value="daily">当日汇总 (daily)</option>
-                                    <option value="current">当前榜单 (current)</option>
-                                    <option value="incremental">增量监控 (incremental)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="form-label">排名阈值</label>
-                                <input type="number" v-model.number="configObj.report.rank_threshold">
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <!-- Notification Config -->
-                    <fieldset>
-                        <legend>通知设置 (Notification)</legend>
-                        <div class="space-y-4">
-                            <div class="mb-4">
-                                <label class="inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" v-model="configObj.notification.enable_notification" class="mr-2">
-                                    <span class="text-sm font-medium text-gray-700">启用通知</span>
-                                </label>
-                            </div>
-
-                            <div v-if="configObj.notification.enable_notification" class="space-y-4">
-                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                    <h4 class="font-medium mb-4 text-gray-900">Webhooks</h4>
-                                    <div class="grid grid-cols-1 gap-4">
-                                        <div>
-                                            <label class="form-label">飞书 Webhook</label>
-                                            <input type="text" v-model="configObj.notification.webhooks.feishu_url" placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/...">
-                                        </div>
-                                        <div>
-                                            <label class="form-label">钉钉 Webhook</label>
-                                            <input type="text" v-model="configObj.notification.webhooks.dingtalk_url" placeholder="https://oapi.dingtalk.com/robot/send?access_token=...">
-                                        </div>
-                                        <div>
-                                            <label class="form-label">企业微信 Webhook</label>
-                                            <input type="text" v-model="configObj.notification.webhooks.wework_url" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
-                                        </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="form-label">Telegram Bot Token</label>
-                                                <input type="text" v-model="configObj.notification.webhooks.telegram_bot_token" placeholder="123456789:AAHfiqksKZ8...">
-                                            </div>
-                                            <div>
-                                                <label class="form-label">Telegram Chat ID</label>
-                                                <input type="text" v-model="configObj.notification.webhooks.telegram_chat_id" placeholder="-1001234567890">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                    <h4 class="font-medium mb-4 text-gray-900">邮件通知</h4>
-                                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                        <div>
-                                            <label class="form-label">发件人邮箱</label>
-                                            <input type="text" v-model="configObj.notification.webhooks.email_from" placeholder="sender@example.com">
-                                        </div>
-                                        <div>
-                                            <label class="form-label">密码/授权码</label>
-                                            <input type="password" v-model="configObj.notification.webhooks.email_password" placeholder="授权码或密码">
-                                        </div>
-                                        <div class="sm:col-span-2">
-                                            <label class="form-label">收件人邮箱 (逗号分隔)</label>
-                                            <input type="text" v-model="configObj.notification.webhooks.email_to" placeholder="user1@example.com,user2@example.com">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    <!-- Weight Config -->
-                    <fieldset>
-                        <legend>权重算法 (Weight)</legend>
-                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                            <div>
-                                <label class="form-label">排名权重 (0-1)</label>
-                                <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.rank_weight">
-                            </div>
-                            <div>
-                                <label class="form-label">频次权重 (0-1)</label>
-                                <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.frequency_weight">
-                            </div>
-                            <div>
-                                <label class="form-label">热度权重 (0-1)</label>
-                                <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.hotness_weight">
-                            </div>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-3">💡 提示：三个权重之和建议为 1.0</p>
-                    </fieldset>
-                </div>
-
-                <textarea v-else v-model="configYaml" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm p-4 bg-gray-50 min-h-[600px]" spellcheck="false"></textarea>
-            </div>
-
-            <!-- Keywords Editor (Table Based) -->
-            <div v-if="currentTab === 'keywords'" class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
-                <div class="flex justify-between items-center mb-6 pb-4 border-b">
-                    <h3 class="text-lg font-medium leading-6 text-gray-900">关键词配置</h3>
-                    <div class="flex space-x-3">
-                        <button @click="toggleKeywordMode" class="text-sm text-indigo-600 hover:text-indigo-900 font-medium">
-                            切换到{{ isRawKeywords ? '表格' : '源码' }}模式
-                        </button>
-                        <button @click="saveKeywords" class="btn text-white bg-indigo-600 hover:bg-indigo-700">
-                            保存关键词
-                        </button>
-                    </div>
-                </div>
-
-                <div v-if="!isRawKeywords" class="space-y-4 overflow-y-auto max-h-[70vh]">
-                    <div v-for="(group, idx) in keywordGroups" :key="idx" class="keyword-group">
-                        <button @click="removeKeywordGroup(idx)" class="absolute top-3 right-3 text-red-500 hover:text-red-700 text-sm font-medium">删除</button>
-                        
-                        <div class="mb-4">
-                            <label class="keyword-section-label">普通词 (任意匹配)</label>
-                            <div class="flex flex-wrap gap-2">
-                                <span v-for="(word, wIdx) in group.normal" :key="wIdx" class="keyword-tag bg-blue-100 text-blue-800">
-                                    {{ word }}
-                                    <button @click="removeWord(group.normal, wIdx)" class="text-blue-600 hover:text-blue-900">×</button>
-                                </span>
-                                <input type="text" placeholder="+ 添加普通词" @keydown.enter.prevent="addWord($event, group.normal)" class="keyword-input">
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="keyword-section-label">必须词 (+)</label>
-                            <div class="flex flex-wrap gap-2">
-                                <span v-for="(word, wIdx) in group.required" :key="wIdx" class="keyword-tag bg-green-100 text-green-800">
-                                    +{{ word }}
-                                    <button @click="removeWord(group.required, wIdx)" class="text-green-600 hover:text-green-900">×</button>
-                                </span>
-                                <input type="text" placeholder="+ 添加必须词" @keydown.enter.prevent="addWord($event, group.required)" class="keyword-input">
-                            </div>
-                        </div>
-
+            <!-- 系统配置 -->
+            <div v-show="currentTab === 'config'">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <label class="keyword-section-label">过滤词 (!)</label>
-                            <div class="flex flex-wrap gap-2">
-                                <span v-for="(word, wIdx) in group.filters" :key="wIdx" class="keyword-tag bg-red-100 text-red-800">
-                                    !{{ word }}
-                                    <button @click="removeWord(group.filters, wIdx)" class="text-red-600 hover:text-red-900">×</button>
-                                </span>
-                                <input type="text" placeholder="+ 添加过滤词" @keydown.enter.prevent="addWord($event, group.filters)" class="keyword-input">
+                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">系统配置</h2>
+                            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">管理系统运行参数和通知设置</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button @click="toggleConfigMode" class="btn btn-sm btn-secondary">
+                                {{ isRawConfig ? '表单模式' : '源码模式' }}
+                            </button>
+                            <button @click="saveConfig" class="btn btn-sm btn-primary">
+                                <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                </svg>
+                                保存配置
+                            </button>
                             </div>
+                            </div>
+                    <div class="card-body" style="max-height: calc(100vh - 280px); overflow-y: auto;">
+                        <!-- 表单模式 -->
+                        <div v-if="!isRawConfig && configObj" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                            
+                            <!-- 应用设置 -->
+                            <div class="section">
+                                <div class="section-title">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                        </path>
+                                    </svg>
+                                    基础设置
+                                </div>
+                                <div class="form-grid">
+                                    <div class="col-span-8">
+                                        <label class="form-label">版本检查 URL</label>
+                                        <input type="text" v-model="configObj.app.version_check_url" class="form-control"
+                                            placeholder="https://api.github.com/...">
+                                        </div>
+                                    <div class="col-span-4">
+                                        <label class="form-label">版本更新提示</label>
+                                        <div class="form-check">
+                                            <input type="checkbox" v-model="configObj.app.show_version_update" id="show-version">
+                                            <label for="show-version">启用版本更新提示</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+
+                            <!-- 爬虫设置 -->
+                            <div class="section">
+                                <div class="section-title">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9">
+                                        </path>
+                                    </svg>
+                                    爬虫配置
+                                </div>
+                                <div class="form-grid">
+                                    <div class="col-span-3">
+                                        <label class="form-label">启用爬虫功能</label>
+                                        <div class="form-check">
+                                            <input type="checkbox" v-model="configObj.crawler.enable_crawler" id="enable-crawler">
+                                            <label for="enable-crawler">启用爬取功能</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-3">
+                                        <label class="form-label">请求间隔（毫秒）</label>
+                                        <input type="number" v-model.number="configObj.crawler.request_interval" class="form-control" min="100"
+                                            step="100">
+                                        <div class="help-text">建议不低于 1000ms，避免请求过快</div>
+                                    </div>
+                                    <div class="col-span-3">
+                                        <label class="form-label">使用代理</label>
+                                        <div class="form-check">
+                                            <input type="checkbox" v-model="configObj.crawler.use_proxy" id="use-proxy">
+                                            <label for="use-proxy">启用HTTP代理</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-span-12" v-if="configObj.crawler.use_proxy">
+                                        <label class="form-label">代理服务器地址</label>
+                                        <input type="text" v-model="configObj.crawler.default_proxy" class="form-control"
+                                            placeholder="http://127.0.0.1:10086">
+                                    </div>
+                                </div>
+                                </div>
+
+                            <!-- 报告设置 -->
+                            <div class="section">
+                                <div class="section-title">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                        </path>
+                                    </svg>
+                                    报告模式
+                                </div>
+                                <div class="form-grid">
+                                    <div class="col-span-6">
+                                        <label class="form-label">推送模式</label>
+                                        <select v-model="configObj.report.mode" class="form-control">
+                                            <option value="daily">当日汇总模式 (daily) - 按时推送当日所有匹配新闻</option>
+                                            <option value="current">当前榜单模式 (current) - 按时推送当前榜单匹配新闻</option>
+                                            <option value="incremental">增量监控模式 (incremental) - 仅推送新增内容</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-span-6">
+                                        <label class="form-label">排名高亮阈值</label>
+                                        <input type="number" v-model.number="configObj.report.rank_threshold" class="form-control" min="1" step="1">
+                                        <div class="help-text">排名小于等于此值的新闻将高亮显示</div>
+                                    </div>
+                                    </div>
+                                    </div>
+                                    
+                                    <!-- 通知设置 -->
+                                    <div class="section">
+                                        <div class="section-title">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                                </path>
+                                            </svg>
+                                            通知推送
+                                        </div>
+                                        <div class="form-grid">
+                                            <div class="col-span-12">
+                                                <div class="form-check">
+                                                    <input type="checkbox" v-model="configObj.notification.enable_notification" id="enable-notif">
+                                                    <label for="enable-notif">启用通知推送功能</label>
+                                                </div>
+                                            </div>
+                                    
+                                    <template v-if="configObj.notification.enable_notification">
+                                        <!-- 推送时间窗口 -->
+                                        <div class="col-span-12"
+                                            style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
+                                            <h4
+                                                style="font-size: 0.9375rem; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                                                <svg style="width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; color: #667eea;" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </svg>
+                                                推送时间窗口
+                                            </h4>
+                                            <div class="form-grid">
+                                                <div class="col-span-12">
+                                                    <div class="form-check">
+                                                        <input type="checkbox" v-model="configObj.notification.push_window.enabled"
+                                                            id="push-window-enabled">
+                                                        <label for="push-window-enabled">启用推送时间窗口控制</label>
+                                                    </div>
+                                                    <div class="help-text">限制推送的时间范围，避免非工作时间打扰</div>
+                                                </div>
+                                                <template v-if="configObj.notification.push_window.enabled">
+                                                    <div class="col-span-4">
+                                                        <label class="form-label">开始时间</label>
+                                                        <input type="time" v-model="configObj.notification.push_window.time_range.start"
+                                                            class="form-control">
+                                                    </div>
+                                                    <div class="col-span-4">
+                                                        <label class="form-label">结束时间</label>
+                                                        <input type="time" v-model="configObj.notification.push_window.time_range.end" class="form-control">
+                                                    </div>
+                                                    <div class="col-span-4">
+                                                        <label class="form-label">每日一次</label>
+                                                        <div class="form-check">
+                                                            <input type="checkbox" v-model="configObj.notification.push_window.once_per_day"
+                                                                id="once-per-day">
+                                                            <label for="once-per-day">窗口内仅推送一次</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-span-12">
+                                                        <label class="form-label">记录保留天数</label>
+                                                        <input type="number" v-model.number="configObj.notification.push_window.push_record_retention_days"
+                                                            class="form-control" min="1">
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        <!-- Webhooks -->
+                                        <div class="col-span-12"
+                                            style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
+                                            <h4
+                                                style="font-size: 0.9375rem; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                                                <svg style="width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; color: #667eea;" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                                                    </path>
+                                                </svg>
+                                                即时通讯 Webhooks
+                                            </h4>
+                                            <div class="form-grid">
+                                                <div class="col-span-6">
+                                                    <label class="form-label">飞书 Webhook URL</label>
+                                                    <input type="text" v-model="configObj.notification.webhooks.feishu_url" class="form-control"
+                                                        placeholder="https://open.feishu.cn/open-apis/bot/v2/hook/...">
+                                                </div>
+                                                <div class="col-span-6">
+                                                    <label class="form-label">钉钉 Webhook URL</label>
+                                                    <input type="text" v-model="configObj.notification.webhooks.dingtalk_url" class="form-control"
+                                                        placeholder="https://oapi.dingtalk.com/robot/send?access_token=...">
+                                                </div>
+                                                <div class="col-span-6">
+                                                    <label class="form-label">企业微信 Webhook URL</label>
+                                                    <input type="text" v-model="configObj.notification.webhooks.wework_url" class="form-control"
+                                                        placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=...">
+                                                </div>
+                                                <div class="col-span-3">
+                                                    <label class="form-label">Telegram Bot Token</label>
+                                                    <input type="text" v-model="configObj.notification.webhooks.telegram_bot_token" class="form-control"
+                                                        placeholder="123456789:AAH...">
+                                                    </div>
+                                                <div class="col-span-3">
+                                                    <label class="form-label">Telegram Chat ID</label>
+                                                    <input type="text" v-model="configObj.notification.webhooks.telegram_chat_id" class="form-control"
+                                                        placeholder="-1001234567890">
+                                                    </div>
+                                                    </div>
+                                                    </div>
+                                                    
+                                                    <!-- 邮件通知 -->
+                                                    <div class="col-span-12"
+                                                        style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
+                                                        <h4
+                                                            style="font-size: 0.9375rem; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                                                            <svg style="width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; color: #667eea;" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                                                </path>
+                                                            </svg>
+                                                            邮件通知
+                                                        </h4>
+                                                        <div class="form-grid">
+                                                            <div class="col-span-4">
+                                                                <label class="form-label">发件人邮箱</label>
+                                                                <input type="email" v-model="configObj.notification.webhooks.email_from" class="form-control"
+                                                                    placeholder="sender@example.com">
+                                                            </div>
+                                                            <div class="col-span-4">
+                                                                <label class="form-label">邮箱密码/授权码</label>
+                                                                <input type="password" v-model="configObj.notification.webhooks.email_password" class="form-control"
+                                                                    placeholder="••••••••">
+                                                            </div>
+                                                            <div class="col-span-4">
+                                                                <label class="form-label">收件人邮箱</label>
+                                                                <input type="text" v-model="configObj.notification.webhooks.email_to" class="form-control"
+                                                                    placeholder="user1@example.com, user2@example.com">
+                                                                <div class="help-text">多个收件人用逗号分隔</div>
+                                                            </div>
+                                                            <div class="col-span-6">
+                                                                <label class="form-label">SMTP 服务器地址 <span style="color: #9ca3af; font-weight: 400;">(可选)</span></label>
+                                                                <input type="text" v-model="configObj.notification.webhooks.email_smtp_server" class="form-control"
+                                                                    placeholder="留空自动识别">
+                                                            </div>
+                                                            <div class="col-span-6">
+                                                                <label class="form-label">SMTP 端口 <span style="color: #9ca3af; font-weight: 400;">(可选)</span></label>
+                                                                <input type="text" v-model="configObj.notification.webhooks.email_smtp_port" class="form-control"
+                                                                    placeholder="留空自动识别">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Ntfy 通知 -->
+                                                    <div class="col-span-12"
+                                                        style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.25rem; margin-top: 0.5rem;">
+                                                        <h4
+                                                            style="font-size: 0.9375rem; font-weight: 600; color: #374151; margin-bottom: 1rem; display: flex; align-items: center;">
+                                                            <svg style="width: 1.125rem; height: 1.125rem; margin-right: 0.5rem; color: #667eea;" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+                                                                </path>
+                                                            </svg>
+                                                            Ntfy 推送
+                                                        </h4>
+                                                        <div class="form-grid">
+                                                            <div class="col-span-6">
+                                                                <label class="form-label">Ntfy 服务器地址</label>
+                                                                <input type="text" v-model="configObj.notification.webhooks.ntfy_server_url" class="form-control"
+                                                                    placeholder="https://ntfy.sh">
+                                                            </div>
+                                                            <div class="col-span-3">
+                                                                <label class="form-label">主题名称</label>
+                                                                <input type="text" v-model="configObj.notification.webhooks.ntfy_topic" class="form-control"
+                                                                    placeholder="my-topic">
+                                                            </div>
+                                                            <div class="col-span-3">
+                                                                <label class="form-label">访问令牌 <span style="color: #9ca3af; font-weight: 400;">(可选)</span></label>
+                                                                <input type="text" v-model="configObj.notification.webhooks.ntfy_token" class="form-control"
+                                                                    placeholder="tk_...">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    </template>
+                                                    </div>
+                                                    </div>
+                                                    
+                                                    <!-- 权重算法 -->
+                                                    <div class="section">
+                                                        <div class="section-title">
+                                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3">
+                                                                </path>
+                                                            </svg>
+                                                            权重算法
+                                                        </div>
+                                                        <div class="form-grid">
+                                                            <div class="col-span-12">
+                                                                <div
+                                                                    style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                                                                    <div style="display: flex; align-items: center; color: #92400e;">
+                                                                        <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; flex-shrink: 0;" fill="none"
+                                                                            stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                                        </svg>
+                                                                        <div style="font-size: 0.875rem;">三个权重值之和建议为 1.0，当前总和：<strong>{{ weightSum.toFixed(2) }}</strong>
+                                                                            <span v-if="weightSum !== 1.0" style="color: #dc2626;">(建议调整)</span></div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-span-4">
+                                                                <label class="form-label">排名权重</label>
+                                                                <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.rank_weight"
+                                                                    class="form-control">
+                                                                <div class="help-text">排名越靠前权重越高</div>
+                                                            </div>
+                                                            <div class="col-span-4">
+                                                                <label class="form-label">频次权重</label>
+                                                                <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.frequency_weight"
+                                                                    class="form-control">
+                                                                <div class="help-text">出现频次越高权重越高</div>
+                                                            </div>
+                                    <div class="col-span-4">
+                                        <label class="form-label">热度权重</label>
+                                        <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.hotness_weight"
+                                            class="form-control">
+                                        <div class="help-text">热度数值越高权重越高</div>
+                                    </div>
+                                    </div>
+                                    </div>
+
+                        </div>
+<!-- 源码模式 -->
+<div v-else>
+    <div
+        style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; color: #1e40af; font-size: 0.875rem;">
+            <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; flex-shrink: 0;" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div>直接编辑 YAML 配置文件，保存前请确保格式正确</div>
+        </div>
+                            </div>
+                            <textarea v-model="configYaml" class="form-control"
+                                style="font-family: 'Monaco', 'Menlo', monospace; font-size: 0.8125rem; min-height: 600px; line-height: 1.6;"
+                                spellcheck="false"></textarea>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+
+            <!-- 平台管理 -->
+            <div v-show="currentTab === 'platforms'">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">平台管理</h2>
+                            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">管理要监控的热搜平台</p>
+                            </div>
+                            <button @click="addPlatform" class="btn btn-sm btn-primary">
+                                <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                添加平台
+                            </button>
+                            </div>
+                            <div class="card-body">
+                                <div v-if="configObj && configObj.platforms && configObj.platforms.length > 0"
+                                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                                    <div v-for="(platform, idx) in configObj.platforms" :key="idx" class="platform-card">
+                                        <div style="display: flex; justify-content: between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                            <div style="flex: 1;">
+                                                <div style="font-weight: 600; color: #111827; margin-bottom: 0.25rem;">{{ platform.name }}</div>
+                                                <div style="font-size: 0.75rem; color: #6b7280; font-family: monospace;">ID: {{ platform.id }}</div>
+                                            </div>
+                                            <button @click="removePlatform(idx)"
+                                                style="color: #ef4444; background: none; border: none; cursor: pointer; padding: 0.25rem;">
+                                                <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <div style="display: grid; gap: 0.5rem;">
+                                            <input type="text" v-model="platform.name" class="form-control" placeholder="平台名称"
+                                                style="padding: 0.5rem 0.75rem; font-size: 0.8125rem;">
+                                            <input type="text" v-model="platform.id" class="form-control" placeholder="平台ID"
+                                                style="padding: 0.5rem 0.75rem; font-size: 0.8125rem; font-family: monospace;">
+                                        </div>
+                                    </div>
+                                </div>
+                        <div v-else class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                                </path>
+                            </svg>
+                            <p>暂无平台配置</p>
+                            <button @click="addPlatform" class="btn btn-sm btn-primary" style="margin-top: 1rem;">添加第一个平台</button>
                         </div>
                     </div>
-
-                    <button @click="addKeywordGroup" class="w-full py-3 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:border-indigo-500 hover:text-indigo-500 font-medium text-sm transition-all">
-                        + 添加新词组
-                    </button>
-                </div>
-
-                <div v-else>
-                    <p class="text-sm text-gray-500 mb-3">使用空行分隔不同的关键词组。!开头为过滤词，+开头为必须词。</p>
-                    <textarea v-model="keywordsContent" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-mono text-sm p-4 bg-gray-50 min-h-[600px]" spellcheck="false"></textarea>
-                </div>
+                    </div>
             </div>
 
-        </main>
+            <!-- 关键词配置 -->
+            <div v-show="currentTab === 'keywords'">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 style="font-size: 1.125rem; font-weight: 700; color: #111827;">关键词配置</h2>
+                            <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">设置要监控的关键词组合</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button @click="toggleKeywordMode" class="btn btn-sm btn-secondary">
+                                {{ isRawKeywords ? '表格模式' : '源码模式' }}
+                            </button>
+                            <button @click="saveKeywords" class="btn btn-sm btn-primary">
+                                <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                                </svg>
+                                保存关键词
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" style="max-height: calc(100vh - 280px); overflow-y: auto;">
+                        <!-- 表格模式 -->
+                        <div v-if="!isRawKeywords">
+                            <div v-if="keywordGroups.length === 0" class="empty-state">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                                    </path>
+                                </svg>
+                                <p>暂无关键词组</p>
+                                <button @click="addKeywordGroup" class="btn btn-sm btn-primary" style="margin-top: 1rem;">添加第一个词组</button>
+                            </div>
+                            <div v-for="(group, idx) in keywordGroups" :key="idx"
+                                style="background: white; border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                                    <h3 style="font-size: 1rem; font-weight: 700; color: #111827;">词组 {{ idx + 1 }}</h3>
+                                    <button @click="removeKeywordGroup(idx)" class="btn btn-sm btn-danger">
+                                        <svg style="width: 0.875rem; height: 0.875rem; margin-right: 0.375rem;" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg>
+                                        删除词组
+                                    </button>
+                                </div>
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <!-- 普通词 -->
+                                    <div>
+                                        <label
+                                            style="display: flex; align-items: center; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.625rem;">
+                                            <span
+                                                style="display: inline-block; width: 0.625rem; height: 0.625rem; background: #3b82f6; border-radius: 50%; margin-right: 0.5rem;"></span>
+                                            普通词（任意匹配）
+                                        </label>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                            <span v-for="(word, wIdx) in group.normal" :key="wIdx" class="keyword-tag"
+                                                style="background: #dbeafe; color: #1e40af;">
+                                                {{ word }}
+                                                <button @click="removeWord(group.normal, wIdx)" style="color: #1e40af;">×</button>
+                                                </span>
+                                                <input type="text" placeholder="+ 添加普通词" @keydown.enter.prevent="addWord($event, group.normal)" class="keyword-input">
+                                                </div>
+                                                </div>
+                                    <!-- 必须词 -->
+                                    <div>
+                                        <label
+                                            style="display: flex; align-items: center; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.625rem;">
+                                            <span
+                                                style="display: inline-block; width: 0.625rem; height: 0.625rem; background: #10b981; border-radius: 50%; margin-right: 0.5rem;"></span>
+                                            必须词（+开头）
+                                        </label>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                            <span v-for="(word, wIdx) in group.required" :key="wIdx" class="keyword-tag"
+                                                style="background: #d1fae5; color: #065f46;">
+                                                +{{ word }}
+                                                <button @click="removeWord(group.required, wIdx)" style="color: #065f46;">×</button>
+                                                </span>
+                                                <input type="text" placeholder="+ 添加必须词" @keydown.enter.prevent="addWord($event, group.required)" class="keyword-input">
+                                                </div>
+                                                </div>
+                                    <!-- 过滤词 -->
+                                    <div>
+                                        <label
+                                            style="display: flex; align-items: center; font-size: 0.8125rem; font-weight: 600; color: #374151; margin-bottom: 0.625rem;">
+                                            <span
+                                                style="display: inline-block; width: 0.625rem; height: 0.625rem; background: #ef4444; border-radius: 50%; margin-right: 0.5rem;"></span>
+                                            过滤词（!开头，排除）
+                                        </label>
+                                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                            <span v-for="(word, wIdx) in group.filters" :key="wIdx" class="keyword-tag"
+                                                style="background: #fee2e2; color: #991b1b;">
+                                                !{{ word }}
+                                                <button @click="removeWord(group.filters, wIdx)" style="color: #991b1b;">×</button>
+                                                </span>
+                                                <input type="text" placeholder="+ 添加过滤词" @keydown.enter.prevent="addWord($event, group.filters)" class="keyword-input">
+                                                </div>
+                                                </div>
+                                                </div>
+                            </div>
+                            
+                            <button @click="addKeywordGroup"
+                                style="width: 100%; padding: 1.5rem; border: 2px dashed #d1d5db; border-radius: 0.75rem; background: transparent; color: #6b7280; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                                onmouseover="this.style.borderColor='#667eea'; this.style.color='#667eea';"
+                                onmouseout="this.style.borderColor='#d1d5db'; this.style.color='#6b7280';">
+                                <svg style="display: inline-block; width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; vertical-align: middle;"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                添加新词组
+                            </button>
+                            </div>
+
+                        <!-- 源码模式 -->
+                        <div v-else>
+                            <div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                                <div style="display: flex; color: #1e40af; font-size: 0.875rem;">
+                                    <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; flex-shrink: 0;" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <strong>格式说明：</strong><br>
+                                        • 使用空行分隔不同的关键词组<br>
+                                        • <code style="background: #f3f4f6; padding: 0.125rem 0.375rem; border-radius: 0.25rem;">!开头</code>
+                                        为过滤词（排除包含该词的结果）<br>
+                                        • <code style="background: #f3f4f6; padding: 0.125rem 0.375rem; border-radius: 0.25rem;">+开头</code>
+                                        为必须词（必须包含该词）<br>
+                                        • 无前缀为普通词（任意匹配即可）
+                                    </div>
+                                </div>
+                                </div>
+                                <textarea v-model="keywordsContent" class="form-control"
+                                    style="font-family: 'Monaco', 'Menlo', monospace; font-size: 0.8125rem; min-height: 600px; line-height: 1.6;"
+                                    spellcheck="false"></textarea>
+                                </div>
+                                </div>
+                                </div>
+            </div>
+
+        </div>
+        
+        <!-- Toast 通知 -->
+        <div v-if="toast.show" class="toast"
+            :style="{background: toast.type === 'success' ? '#d1fae5' : '#fee2e2', color: toast.type === 'success' ? '#065f46' : '#991b1b'}">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <svg v-if="toast.type === 'success'" style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <svg v-else style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span style="font-weight: 600;">{{ toast.message }}</span>
+            </div>
+        </div>
     </div>
 
     <script>
-        const { createApp, ref, onMounted, onUnmounted } = Vue
+        const { createApp, ref, computed, onMounted, onUnmounted } = Vue
 
         createApp({
             setup() {
                 const currentTab = ref('dashboard')
+                const windowWidth = ref(window.innerWidth)
                 const status = ref({ isRunning: false, lastRunTime: '', lastLog: '' })
                 
                 // Config State
@@ -506,13 +1126,27 @@
                 const keywordsContent = ref('')
                 const keywordGroups = ref([])
 
+                // Toast
+            = ref({ show: false, message: '', type: 'success' })
+
                 let pollTimer = null
 
-                const tabClass = (tab) => {
-                    return currentTab.value === tab 
-                        ? 'border-indigo-500 text-gray-900'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                // 窗口大小监听
+                const handleResize = () => { windowWidth.value = window.innerWidth }
+                window.addEventListener('resize', handleResize)
+
+                // 显示 Toast
+                const showToast = (message, type = 'success') => {
+                    toast.value = { show: true, message, type }
+                    setTimeout(() => { toast.value.show = false }, 3000)
                 }
+
+                // 计算权重和
+                const weightSum = computed(() => {
+                    if (!configObj.value || !configObj.value.weight) return 0
+                    const w = configObj.value.weight
+                    return (w.rank_weight || 0) + (w.frequency_weight || 0) + (w.hotness_weight || 0)
+                })
 
                 const fetchStatus = async () => {
                     try {
@@ -520,36 +1154,43 @@
                         const data = await res.json()
                         status.value = data
                     } catch (e) {
-                        console.error(e)
+                        console.error('获取状态失败:', e)
                     }
                 }
 
                 const fetchConfig = async () => {
-                    const res = await fetch('/api/config')
-                    const data = await res.json()
-                    configYaml.value = data.yaml
-                    if (data.json) {
-                        configObj.value = data.json
-                    } else {
-                        try {
+                    try {
+                        const res = await fetch('/api/config')
+                        const data = await res.json()
+                        configYaml.value = data.yaml
+                        if (data.json) {
+                            configObj.value = data.json
+                        } else {
                             configObj.value = jsyaml.load(data.yaml)
-                        } catch (e) {
-                            console.error('YAML parse error:', e)
-                            isRawConfig.value = true
                         }
+                    } catch (e) {
+                        console.error('获取配置失败:', e)
+                        showToast('获取配置失败', 'error')
                     }
                 }
 
                 const fetchKeywords = async () => {
-                    const res = await fetch('/api/keywords')
-                    const data = await res.json()
-                    keywordsContent.value = data.content
-                    parseKeywords(data.content)
+                    try {
+                        const res = await fetch('/api/keywords')
+                        const data = await res.json()
+                        keywordsContent.value = data.content
+                        parseKeywords(data.content)
+                    } catch (e) {
+                        console.error('获取关键词失败:', e)
+                    }
                 }
 
                 const parseKeywords = (text) => {
                     const groups = []
-                    if (!text) return
+                    if (!text) {
+                        keywordGroups.value = groups
+                        return
+                    }
                     
                     const rawGroups = text.split(/\n\s*\n/)
                     rawGroups.forEach(raw => {
@@ -563,7 +1204,9 @@
                             else if (line.startsWith('+')) group.required.push(line.substring(1))
                             else group.normal.push(line)
                         })
-                        groups.push(group)
+                        if (group.normal.length > 0 || group.required.length > 0 || group.filters.length > 0) {
+                            groups.push(group)
+                        }
                     })
                     keywordGroups.value = groups
                 }
@@ -575,7 +1218,7 @@
                         group.required.forEach(w => lines.push('+' + w))
                         group.filters.forEach(w => lines.push('!' + w))
                         return lines.join('\n')
-                    }).join('\n\n')
+                    }).filter(g => g.trim()).join('\n\n')
                 }
 
                 const saveConfig = async () => {
@@ -587,45 +1230,53 @@
                             payload.jsonConfig = configObj.value
                         }
 
-                        await fetch('/api/config', {
+                        const res = await fetch('/api/config', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(payload)
                         })
-                        alert('✅ 配置已保存')
-                        fetchConfig()
+                        
+                        if (res.ok) {
+                            showToast('配置已保存成功', 'success')
+                            await fetchConfig()
+                        } else {
+                            const text = await res.text()
+                            showToast('保存失败: ' + text, 'error')
+                        }
                     } catch (e) {
-                        alert('❌ 保存失败: ' + e)
+             失败: ' + e.message, 'error')
                     }
                 }
 
                 const saveKeywords = async () => {
                     try {
                         const content = isRawKeywords.value ? keywordsContent.value : stringifyKeywords()
-                        await fetch('/api/keywords', {
+                        const res = await fetch('/api/keywords', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ content })
                         })
-                        alert('✅ 关键词已保存')
-                        fetchKeywords()
+                        
+                        if (res.ok) {
+                            showToast('关键词已保存成功', 'success')
+                            await fetchKeywords()
+                        } else {
+                            const text = await res.text()
+                            showToast('保存失败: ' + text, 'error')
+                        }
                     } catch (e) {
-                        alert('❌ 保存失败: ' + e)
+          '保存失败: ' + e.message, 'error')
                     }
                 }
 
                 const toggleConfigMode = () => {
                     if (!isRawConfig.value) {
-                        if (typeof jsyaml !== 'undefined') {
-                            configYaml.value = jsyaml.dump(configObj.value)
-                        }
+                        configYaml.value = jsyaml.dump(configObj.value)
                     } else {
                         try {
-                            if (typeof jsyaml !== 'undefined') {
-                                configObj.value = jsyaml.load(configYaml.value)
-                            }
+                            configObj.value = jsyaml.load(configYaml.value)
                         } catch (e) {
-                            alert('YAML 格式错误，无法切换到表单模式: ' + e.message)
+                            showToast('YAML 格式错误: ' + e.message, 'error')
                             return
                         }
                     }
@@ -646,7 +1297,9 @@
                 }
 
                 const removeKeywordGroup = (idx) => {
-                    keywordGroups.value.splice(idx, 1)
+                    if (confirm('确定要删除这个词组吗？')) {
+                        keywordGroups.value.splice(idx, 1)
+                    }
                 }
 
                 const addWord = (e, list) => {
@@ -661,45 +1314,78 @@
                     list.splice(idx, 1)
                 }
 
+                const addPlatform = () => {
+                    if (!configObj.value.platforms) {
+                        configObj.value.platforms = []
+                    }
+                    configObj.value.platforms.push({ id: '', name: '' })
+                }
+
+                const removePlatform = (idx) => {
+                    if (confirm('确定要删除这个平台吗？')) {
+                        configObj.value.platforms.splice(idx, 1)
+                    }
+                }
+
                 const runTask = async () => {
                     try {
-                        await fetch('/api/run', { method: 'POST' })
-                        fetchStatus()
+                        const res = await fetch('/api/run', { method: 'POST' })
+                        if (res.ok) {
+                            showToast('任务已启动', 'success')
+                            await fetchStatus()
+                        } else {
+                            const text = await res.text()
+                            showToast('启动失败: ' + text, 'error')
+                        }
                     } catch (e) {
-                        alert('启动失败: ' + e)
+                        showToast('启动失败: ' + e.message, 'error')
+                    }
+                }
+
+                const clearLog = () => {
+                    if (confirm('确定要清空日志吗？')) {
+                        status.value.lastLog = ''
                     }
                 }
 
                 const formatTime = (t) => {
                     if (!t || t.startsWith('0001')) return '从未运行'
-                    return new Date(t).toLocaleString()
+                    try {
+                        return new Date(t).toLocaleString('zh-CN', {
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })
+                    } catch (e) {
+                        return t
+                    }
                 }
 
                 onMounted(() => {
                     fetchStatus()
                     fetchConfig()
                     fetchKeywords()
-                    pollTimer = setInterval(fetchStatus, 2000)
+                    pollTimer = setInterval(fetchStatus, 3000)
                 })
 
                 onUnmounted(() => {
                     if (pollTimer) clearInterval(pollTimer)
+                    window.removeEventListener('resize', handleResize)
                 })
 
                 return {
-                    currentTab,
-                    status,
-                    isRawConfig, configYaml, configObj, toggleConfigMode,
+                    currentTab, windowWidth, status, toast,
+                    isRawConfig, configYaml, configObj, toggleConfigMode, weightSum,
                     isRawKeywords, keywordsContent, keywordGroups, toggleKeywordMode,
                     addKeywordGroup, removeKeywordGroup, addWord, removeWord,
-                    tabClass,
-                    saveConfig,
-                    saveKeywords,
-                    runTask,
-                    formatTime
+                    addPlatform, removePlatform,
+                    saveConfig, saveKeywords, runTask, clearLog,
+                    formatTime, fetchStatus, showToast
                 }
             }
         }).mount('#app')
     </script>
 </body>
 </html>
+
