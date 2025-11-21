@@ -156,7 +156,7 @@ version: build
 define build-platform
 	@echo "构建 $(1)/$(2) 版本..."
 	@mkdir -p $(BUILD_DIR)/$(1)-$(2)
-	@GOOS=$(1) GOARCH=$(2) go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)_$(1)_$(2)_$(3) cmd/main.go
+	@GOOS=$(1) GOARCH=$(2) go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME)_$(1)_$(2)$(3) cmd/main.go
 	@echo "构建完成: $(BUILD_DIR)/$(BINARY_NAME)_$(1)_$(2)_$(3)"
 endef
 

@@ -1,8 +1,10 @@
 package web
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"time"
@@ -12,6 +14,9 @@ import (
 	"github.com/gotoailab/trendhub/internal/model"
 	"gopkg.in/yaml.v3"
 )
+
+//go:embed static/*
+var staticFiles embed.FS
 
 type Server struct {
 	Runner *TaskRunner
@@ -32,10 +37,12 @@ func (s *Server) Run(addr string) error {
 	http.HandleFunc("/api/version", s.enableCors(s.handleVersion))
 	http.HandleFunc("/api/logs", s.enableCors(s.handleLogs))
 
-	// 静态文件服务
-	// 假设 web/static 在运行目录的相对路径下
-	fs := http.FileServer(http.Dir("web/static"))
-	http.Handle("/", fs)
+	// 静态文件服务 - 使用嵌入的文件系统
+	staticFS, err := fs.Sub(staticFiles, "static")
+	if err != nil {
+		return fmt.Errorf("failed to create sub filesystem: %w", err)
+	}
+	http.Handle("/", http.FileServer(http.FS(staticFS)))
 
 	fmt.Printf("Web server listening on %s\n", addr)
 	return http.ListenAndServe(addr, nil)

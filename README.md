@@ -4,6 +4,10 @@
 
 一个强大的热点趋势监控和管理平台，支持多平台数据采集、智能关键词过滤、多渠道推送，并提供现代化的 Web 管理界面。
 
+在线demo：http://trendhub.wowwwow.cn/
+
+<img src="https://raw.githubusercontent.com/gotoailab/trendhub/refs/heads/master/docs/images/demo.png" width="800">
+
 ## ✨ 核心功能
 
 - **模块化设计**：配置、爬虫、过滤、排序、推送完全解耦，易于扩展和维护
@@ -67,18 +71,6 @@ go build -o trendhub cmd/main.go
 
 ### 运行
 
-#### 命令行模式（单次运行）
-
-```bash
-./trendhub
-```
-
-或者指定配置文件路径：
-
-```bash
-./trendhub -config /path/to/config.yaml -keywords /path/to/frequency_words.txt
-```
-
 #### Web 模式（推荐）
 
 启动 Web 服务器和定时调度器：
@@ -94,6 +86,18 @@ go build -o trendhub cmd/main.go
 ```
 
 然后在浏览器打开：`http://localhost:8080`
+
+#### 命令行模式（单次运行）
+
+```bash
+./trendhub
+```
+
+或者指定配置文件路径：
+
+```bash
+./trendhub -config /path/to/config.yaml -keywords /path/to/frequency_words.txt
+```
 
 ### Web 界面功能
 
@@ -305,3 +309,11 @@ TrendHub 支持自动版本检测和更新提示：
 - [快速开始指南](docs/QUICKSTART_PUSH.md)
 - [配置热重载功能](docs/CONFIG_HOT_RELOAD.md)
 - [Bark 配置指南](docs/BARK_SETUP.md)
+
+## 社区
+
+添加微信：mongorz，备注：simple 加入微信交流群。
+
+点击或搜索QQ群号加入QQ群：[823136692](https://qun.qq.com/universal-share/share?ac=1&authKey=C4MX6tSrUhKA2xX6M8IosY%2Bb2RyV45O15osUlidAptAwXBgA641FCsENb%2BfiVmki&busi_data=eyJncm91cENvZGUiOiI4MjMxMzY2OTIiLCJ0b2tlbiI6IjJGZmlVUzdsTGRCSytTNGNpajJkQ2F5djYyRUxMbVM1dFN5Y1RXYTRTMG1xejV5N0MrOUM5aEY3aGN4MXVCYmsiLCJ1aW4iOiIzMTc1NDI1NDgwIn0%3D&data=oAc646m4Q0_WTFE6cABXelyZYDd71nAaQ6nA91CQ3A1VNn83sDV5Z-2eXghHkbIXzG16UHCHF4szPTq3A2fhOw&svctype=4&tempid=h5_group_info)
+
+点击加入 Discord 社区：https://discord.gg/B3FwBSQq。
