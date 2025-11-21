@@ -35,6 +35,10 @@ func NewNotificationManager(cfg *config.Config) *NotificationManager {
 	if cfg.Notification.Webhooks.BarkDeviceKey != "" {
 		manager.notifiers = append(manager.notifiers, NewBarkNotifier(cfg.Notification.Webhooks.BarkServerURL, cfg.Notification.Webhooks.BarkDeviceKey))
 	}
+
+	if cfg.Notification.Webhooks.WPSWebhookURL != "" {
+		manager.notifiers = append(manager.notifiers, NewWPSNotifier(cfg.Notification.Webhooks.WPSWebhookURL))
+	}
 	
 	return manager
 }

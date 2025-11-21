@@ -36,6 +36,7 @@ notification:
         wework_url: ""
         bark_server_url: "https://api.day.app"
         bark_device_key: ""
+        wps_webhook_url: ""
 platforms:
     - id: toutiao
       name: 今日头条

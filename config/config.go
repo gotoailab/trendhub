@@ -62,6 +62,7 @@ type WebhooksConfig struct {
 	NtfyToken        string `yaml:"ntfy_token" json:"ntfy_token"`
 	BarkServerURL    string `yaml:"bark_server_url" json:"bark_server_url"`
 	BarkDeviceKey    string `yaml:"bark_device_key" json:"bark_device_key"`
+	WPSWebhookURL    string `yaml:"wps_webhook_url" json:"wps_webhook_url"`
 }
 
 // NotificationConfig 通知配置

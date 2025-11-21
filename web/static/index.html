@@ -489,7 +489,7 @@
                                 TrendHub</h1>
                             <p :style="{fontSize: '0.75rem', color: isDarkMode ? '#d1d5db' : '#6b7280'}">热点趋势监控管理平台</p>
                         </div>
-                    </div>
+                        </div>
                     <!-- 标签导航 -->
                     <div class="tabs" style="flex: 1; justify-content: flex-end; border-bottom: none; margin: 0; align-items: center; gap: 0.5rem;">
                         <button class="tab-item" :class="{active: currentTab === 'history'}" @click="currentTab = 'history'; fetchRecentHistory()">                            
@@ -546,7 +546,7 @@
                                     </svg>
                                     关键词配置
                                 </button>
-                                </div>
+                    </div>
                             </div>
                         </div>
                         <button class="tab-item" :class="{active: currentTab === 'pushrecords'}" @click="currentTab = 'pushrecords'; fetchPushRecords()">
@@ -587,7 +587,7 @@
                 {{ historyDetail.item_count }} 条 · {{ new Date(historyDetail.timestamp).toLocaleString('zh-CN', { hour:
                 '2-digit', minute: '2-digit' }) }}
             </span>
-        </div>
+                        </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
             <!-- 日期选择下拉 -->
             <select v-model="selectedDate" @change="fetchHistoryDetail(selectedDate)"
@@ -605,9 +605,9 @@
                     </path>
                 </svg>
                 刷新
-                </button>
-                </div>
-                </div>
+                            </button>
+                            </div>
+                        </div>
 
     <!-- 内容列表 -->
     <div v-if="historyDetail && historyDetail.items && historyDetail.items.length > 0" style="display: grid; gap: 0.75rem;">
@@ -626,7 +626,7 @@
                         {{ item.title }}
                     </a>
                     <span v-else :style="{color: 'var(--text-primary)', fontWeight: '500', fontSize: '1rem', flex: '1'}">{{ item.title }}</span>
-                </div>
+                    </div>
                 <div :style="{display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-secondary)'}">
                     <span style="background: #e0e7ff; color: #4338ca; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-weight: 500;">
                         {{ getPlatformName(item.source_id) }}
@@ -635,7 +635,7 @@
                         原榜单 #{{ item.ranks[0] }}
                     </span>
                 </div>
-            </div>
+                    </div>
         </div>
     </div>
 <!-- 空状态 -->
@@ -656,8 +656,8 @@
         </path>
     </svg>
     <p>加载中...</p>
-</div>
-</div>
+                </div>
+            </div>
 
             <!-- 系统配置 -->
             <div v-show="currentTab === 'config'">
@@ -887,13 +887,19 @@
                                                     <input type="text" v-model="configObj.notification.webhooks.bark_server_url" class="form-control"
                                                         placeholder="https://api.day.app">
                                                     <div class="help-text">留空使用官方服务器，或填写自建服务器地址</div>
-                                                    </div>
+                                        </div>
                                                 <div class="col-span-3">
                                                     <label class="form-label">Bark Device Key</label>
                                                     <input type="text" v-model="configObj.notification.webhooks.bark_device_key" class="form-control"
                                                         placeholder="你的设备密钥">
                                                     <div class="help-text">在 Bark App 中查看</div>
                                         </div>
+                                                <div class="col-span-6">
+                                                    <label class="form-label">WPS协作 Webhook URL</label>
+                                                    <input type="text" v-model="configObj.notification.webhooks.wps_webhook_url" class="form-control"
+                                                        placeholder="https://xz.wps.cn/api/v1/webhook/send?key=...">
+                                                    <div class="help-text">在 WPS协作 中创建 Webhook 机器人获取</div>
+                                                </div>
                                     </div>
                                 </div>
 
@@ -1202,8 +1208,8 @@
                                 </span>
                                 <input type="text" placeholder="+ 添加过滤词" @keydown.enter.prevent="addWord($event, group.filters)" class="keyword-input">
                             </div>
+                            </div>
                         </div>
-                                                </div>
                     </div>
 
                             <button @click="addKeywordGroup" class="add-group-btn">
@@ -1656,7 +1662,7 @@
 
                         const res = await fetch('/api/version')
                         if (res.ok) {
-                            const data = await res.json()
+                        const data = await res.json()
                             if (data.has_update && data.latest_version) {
                                 versionUpdate.value = {
                                     show: true,
