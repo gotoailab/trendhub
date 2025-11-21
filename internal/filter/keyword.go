@@ -52,11 +52,6 @@ func (f *KeywordFilter) Filter(allData map[string][]*model.NewsItem) (map[string
 	return result, nil
 }
 
-func (f *KeywordFilter) match(title string) bool {
-	matched, _, _, _ := f.matchWithScore(title)
-	return matched
-}
-
 // matchWithScore 匹配标题并返回评分信息
 // 返回值：是否匹配, 匹配分数, 匹配的关键词列表, 关键词组索引
 func (f *KeywordFilter) matchWithScore(title string) (bool, float64, []string, int) {

@@ -107,10 +107,200 @@
             gap: 1.5rem;
         }
         
+        /* 移动端适配 */
         @media (max-width: 768px) {
             .form-grid { gap: 1rem; }
             .col-span-1, .col-span-2, .col-span-3, .col-span-4, 
             .col-span-6, .col-span-8, .col-span-12 { grid-column: span 12; }
+            
+            /* 导航栏移动端适配 */
+            nav {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+            
+            nav > div {
+                padding: 1rem !important;
+            }
+            
+            /* Logo 区域缩小 */
+            .logo-area svg {
+                width: 2rem !important;
+                height: 2rem !important;
+            }
+            
+            .logo-area h1 {
+                font-size: 1.25rem !important;
+            }
+            
+            .logo-area p {
+                display: none !important;
+            }
+            
+            /* 隐藏桌面菜单 */
+            .desktop-menu {
+                display: none !important;
+            }
+            
+            /* 显示移动端菜单按钮 */
+            .mobile-menu-btn {
+                display: block !important;
+            }
+            
+            /* 移动端菜单 */
+            .mobile-menu {
+                display: block !important;
+            }
+            
+            /* Toast 通知位置调整 */
+            .toast {
+                top: 1rem;
+                right: 1rem;
+                left: 1rem;
+                max-width: calc(100% - 2rem);
+            }
+            
+            /* 卡片内边距减小 */
+            .card-header {
+                padding: 1rem !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.75rem !important;
+            }
+            
+            .card-header > div:first-child {
+                width: 100%;
+            }
+            
+            .card-header h2 {
+                font-size: 1rem !important;
+            }
+            
+            .card-header p {
+                font-size: 0.75rem !important;
+                margin-top: 0.25rem !important;
+            }
+            
+            /* 卡片头部按钮组 */
+            .card-header > div:last-child {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                width: 100%;
+            }
+            
+            .card-header .btn {
+                flex: 1;
+                min-width: fit-content;
+                font-size: 0.8125rem !important;
+                padding: 0.5rem 0.75rem !important;
+            }
+            
+            .card-header .btn svg {
+                width: 0.875rem !important;
+                height: 0.875rem !important;
+            }
+            
+            .card-body {
+                padding: 1rem !important;
+            }
+            
+            /* 按钮组垂直排列 */
+            .btn-group {
+                flex-direction: column !important;
+                width: 100%;
+            }
+            
+            .btn-group .btn {
+                width: 100%;
+            }
+            
+            /* 平台卡片单列显示 */
+            .platform-card {
+                grid-template-columns: 1fr !important;
+            }
+            
+            /* 表格滚动 */
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            /* 日期选择器和按钮容器 */
+            .date-selector-container {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 0.75rem !important;
+            }
+            
+            .date-selector-container > div {
+                width: 100% !important;
+            }
+            
+            /* 页码控制 */
+            .pagination-controls {
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+            }
+            
+            .pagination-controls > div {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+            
+            /* 主容器 */
+            .main-container {
+                padding: 1rem !important;
+            }
+            
+            /* Trending 标题栏 */
+            .trending-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.75rem !important;
+                padding: 0.75rem !important;
+            }
+            
+            .trending-header > div:first-child {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 0.5rem !important;
+            }
+            
+            .trending-header h2 {
+                font-size: 1.125rem !important;
+            }
+            
+            .trending-header > div:last-child {
+                width: 100%;
+                flex-direction: column !important;
+                gap: 0.5rem !important;
+            }
+            
+            .trending-header select,
+            .trending-header button {
+                width: 100%;
+            }
+            
+            /* 新闻列表项 */
+            .news-item {
+                padding: 0.75rem !important;
+                gap: 0.75rem !important;
+            }
+            
+            .news-item-number {
+                min-width: 2rem !important;
+                font-size: 1rem !important;
+            }
+            
+            .news-item-title {
+                font-size: 0.9375rem !important;
+            }
+            
+            .news-item-meta {
+                font-size: 0.6875rem !important;
+                flex-wrap: wrap !important;
+            }
         }
         
         .col-span-1 { grid-column: span 1; }
@@ -467,6 +657,111 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+        
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            transition: background 0.2s;
+        }
+        
+        .mobile-menu-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        [data-theme="dark"] .mobile-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 移动端菜单 */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .mobile-menu-content {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 80%;
+            max-width: 300px;
+            background: var(--bg-card);
+            box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+            animation: slideInRight 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .mobile-menu-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mobile-menu-items {
+            padding: 1rem 0;
+        }
+        
+        .mobile-menu-item {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .mobile-menu-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            border-left-color: #667eea;
+        }
+        
+        .mobile-menu-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            border-left-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .mobile-menu-section {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 <body>
@@ -477,7 +772,7 @@
             <div style="max-width: 1400px; margin: 0 auto; padding: 1rem 2rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; gap: 2rem;">
                     <!-- Logo和标题 -->
-                    <div style="display: flex; align-items: center; gap: 1rem; flex-shrink: 0;">
+                    <div class="logo-area" style="display: flex; align-items: center; gap: 1rem; flex-shrink: 0;">
                         <svg style="width: 2.5rem; height: 2.5rem; color: #667eea;" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -490,8 +785,8 @@
                             <p :style="{fontSize: '0.75rem', color: isDarkMode ? '#d1d5db' : '#6b7280'}">热点趋势监控管理平台</p>
                         </div>
                         </div>
-                    <!-- 标签导航 -->
-                    <div class="tabs" style="flex: 1; justify-content: flex-end; border-bottom: none; margin: 0; align-items: center; gap: 0.5rem;">
+                    <!-- 桌面端标签导航 -->
+                    <div class="desktop-menu tabs" style="flex: 1; justify-content: flex-end; border-bottom: none; margin: 0; align-items: center; gap: 0.5rem;">
                         <button class="tab-item" :class="{active: currentTab === 'history'}" @click="currentTab = 'history'; fetchRecentHistory()">                            
                             首页
                         </button>
@@ -579,16 +874,77 @@
                             </svg>
                         </button>
                     </div>
+                    
+                    <!-- 移动端菜单按钮和深色模式切换 -->
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button @click="toggleDarkMode" class="mobile-menu-btn">
+                            <svg v-if="!isDarkMode" style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                            </svg>
+                            <svg v-else style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </button>
+                        <button @click="showMobileMenu = true" class="mobile-menu-btn">
+                            <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </nav>
+        
+        <!-- 移动端菜单 -->
+        <div v-if="showMobileMenu" class="mobile-menu" @click.self="showMobileMenu = false">
+            <div class="mobile-menu-content">
+                <div class="mobile-menu-header">
+                    <h3 :style="{fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0}">菜单</h3>
+                    <button @click="showMobileMenu = false" class="mobile-menu-btn">
+                        <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mobile-menu-items">
+                    <button class="mobile-menu-item" :class="{active: currentTab === 'history'}" 
+                            @click="currentTab = 'history'; fetchRecentHistory(); showMobileMenu = false">
+                        首页
+                    </button>
+                    
+                    <div class="mobile-menu-section">功能设置</div>
+                    <button class="mobile-menu-item" :class="{active: currentTab === 'config'}" 
+                            @click="currentTab = 'config'; showMobileMenu = false">
+                        系统配置
+                    </button>
+                    <button class="mobile-menu-item" :class="{active: currentTab === 'platforms'}" 
+                            @click="currentTab = 'platforms'; showMobileMenu = false">
+                        平台管理
+                    </button>
+                    <button class="mobile-menu-item" :class="{active: currentTab === 'keywords'}" 
+                            @click="currentTab = 'keywords'; showMobileMenu = false">
+                        关键词配置
+                    </button>
+                    <button class="mobile-menu-item" :class="{active: currentTab === 'logs'}" 
+                            @click="currentTab = 'logs'; showMobileMenu = false">
+                        系统日志
+                    </button>
+                    
+                    <div class="mobile-menu-section">其他</div>
+                    <button class="mobile-menu-item" :class="{active: currentTab === 'pushrecords'}" 
+                            @click="currentTab = 'pushrecords'; fetchPushRecords(); showMobileMenu = false">
+                        推送记录
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- 主容器 -->
-        <div style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+        <div class="main-container" style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
 <!-- Trending -->
 <div v-show="currentTab === 'history'">
     <!-- 标题栏 -->
-    <div
+    <div class="trending-header"
         :style="{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', padding: '1rem', background: 'var(--bg-card)', borderRadius: '0.5rem', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'}">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
             <h2 :style="{fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', margin: '0'}">
@@ -623,23 +979,24 @@
 
     <!-- 内容列表 -->
     <div v-if="historyDetail && historyDetail.items && historyDetail.items.length > 0" style="display: grid; gap: 0.75rem;">
-        <div v-for="(item, idx) in historyDetail.items" :key="idx"
+        <div v-for="(item, idx) in historyDetail.items" :key="idx" class="news-item"
             :style="{display: 'flex', gap: '1rem', padding: '1rem 1.25rem', borderRadius: '0.5rem', background: 'var(--bg-card)', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', transition: 'all 0.2s'}">
-            <span style="font-weight: 700; color: #667eea; min-width: 2.5rem; font-size: 1.25rem;">{{ idx + 1 }}</span>
+            <span class="news-item-number" style="font-weight: 700; color: #667eea; min-width: 2.5rem; font-size: 1.25rem;">{{ idx + 1 }}</span>
             <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.375rem;">
                     <a v-if="item.url" 
                        :href="item.url" 
                        target="_blank" 
                        rel="noopener noreferrer"
+                       class="news-item-title"
                        :style="{color: 'var(--text-primary)', fontWeight: '500', fontSize: '1rem', flex: '1', textDecoration: 'none', transition: 'color 0.2s'}"
                        @mouseenter="$event.currentTarget.style.color='#667eea'"
                        @mouseleave="$event.currentTarget.style.color='var(--text-primary)'">
                         {{ item.title }}
                     </a>
-                    <span v-else :style="{color: 'var(--text-primary)', fontWeight: '500', fontSize: '1rem', flex: '1'}">{{ item.title }}</span>
+                    <span v-else class="news-item-title" :style="{color: 'var(--text-primary)', fontWeight: '500', fontSize: '1rem', flex: '1'}">{{ item.title }}</span>
                     </div>
-                <div :style="{display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-secondary)', flexWrap: 'wrap'}">
+                <div class="news-item-meta" :style="{display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-secondary)', flexWrap: 'wrap'}">
                     <span style="background: #e0e7ff; color: #4338ca; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-weight: 500;">
                         {{ getPlatformName(item.source_id) }}
                     </span>
@@ -1752,6 +2109,9 @@
 
                 // 功能设置下拉菜单
                 const showSettingsDropdown = ref(false)
+                
+                // 移动端菜单
+                const showMobileMenu = ref(false)
 
                 // 版本更新提示
                 const versionUpdate = ref({
@@ -2337,7 +2697,8 @@
                     fetchRecentHistory, fetchHistoryDetail, getPlatformName, isToday,
                     showToast, showBackToTop, scrollToTop, showSettingsDropdown,
                     versionUpdate, closeVersionUpdate, showKeywordRuleModal,
-                    isDarkMode, toggleDarkMode, selectStyle
+                    isDarkMode, toggleDarkMode, selectStyle,
+                    showMobileMenu
                 }
             }
         }).mount('#app')
