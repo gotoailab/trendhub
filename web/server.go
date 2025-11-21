@@ -3,12 +3,12 @@ package web
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/gotoailab/trendhub/config"
+	"github.com/gotoailab/trendhub/internal/logger"
 	"github.com/gotoailab/trendhub/internal/model"
 	"gopkg.in/yaml.v3"
 )
@@ -26,9 +26,11 @@ func (s *Server) Run(addr string) error {
 	http.HandleFunc("/api/keywords", s.enableCors(s.handleKeywords))
 	http.HandleFunc("/api/run", s.enableCors(s.handleRun))
 	http.HandleFunc("/api/push-records", s.enableCors(s.handlePushRecords))
+	http.HandleFunc("/api/push-records/clear-today", s.enableCors(s.handleClearTodayRecords))
 	http.HandleFunc("/api/crawl-history", s.enableCors(s.handleCrawlHistory))
 	http.HandleFunc("/api/crawl-history/recent", s.enableCors(s.handleRecentHistory))
 	http.HandleFunc("/api/version", s.enableCors(s.handleVersion))
+	http.HandleFunc("/api/logs", s.enableCors(s.handleLogs))
 
 	// 静态文件服务
 	// 假设 web/static 在运行目录的相对路径下
@@ -112,7 +114,7 @@ func (s *Server) handleConfig(w http.ResponseWriter, r *http.Request) {
 
 		// 重新加载配置并更新调度器和收集器
 		if err := s.Runner.ReloadConfig(r.Context()); err != nil {
-			log.Printf("Warning: Failed to reload configuration: %v", err)
+			logger.Errorf("Warning: Failed to reload configuration: %v", err)
 			// 仍然返回成功，因为文件已经保存
 		}
 
@@ -186,7 +188,7 @@ func (s *Server) handleCrawlHistory(w http.ResponseWriter, r *http.Request) {
 	// 应用过滤和排序
 	filteredItems, err := s.Runner.FilterAndRankData(history.Data)
 	if err != nil {
-		log.Printf("Failed to filter data: %v", err)
+		logger.Errorf("Failed to filter data: %v", err)
 		// 如果过滤失败，返回未过滤的数据
 		var allItems []*model.NewsItem
 		for _, items := range history.Data {
@@ -345,4 +347,74 @@ func (s *Server) handleVersion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(versionInfo)
+}
+
+// handleLogs 处理日志查看请求
+func (s *Server) handleLogs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	logFilePath := s.Runner.GetLogFilePath()
+	if logFilePath == "" {
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"content": "日志文件未配置",
+			"size":    0,
+		})
+		return
+	}
+
+	// 读取日志文件
+	content, err := os.ReadFile(logFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"content": "日志文件不存在",
+				"size":    0,
+			})
+		} else {
+			http.Error(w, fmt.Sprintf("读取日志文件失败: %v", err), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// 获取文件信息
+	fileInfo, err := os.Stat(logFilePath)
+	if err != nil {
+		logger.Errorf("Failed to get log file info: %v", err)
+	}
+
+	response := map[string]interface{}{
+		"content": string(content),
+		"size":    len(content),
+		"path":    logFilePath,
+	}
+
+	if fileInfo != nil {
+		response["modified_time"] = fileInfo.ModTime().Format(time.RFC3339)
+	}
+
+	json.NewEncoder(w).Encode(response)
+}
+
+// handleClearTodayRecords 清除今天的推送记录（用于测试）
+func (s *Server) handleClearTodayRecords(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	deleted, err := s.Runner.PushDB.ClearTodayRecords()
+	if err != nil {
+		http.Error(w, fmt.Sprintf("清除记录失败: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	logger.Infof("Cleared %d push records for today", deleted)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success": true,
+		"deleted": deleted,
+		"message": fmt.Sprintf("已清除今天的 %d 条推送记录", deleted),
+	})
 }

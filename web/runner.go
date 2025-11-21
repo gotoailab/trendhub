@@ -34,6 +34,7 @@ type TaskRunner struct {
 	LastLog        string
 	LastRunTime    time.Time
 	ExtraWriter    io.Writer // 额外的日志输出目标（如 os.Stdout）
+	logFilePath    string    // 日志文件路径
 }
 
 func NewTaskRunner(configPath, keywordPath string, pushDB *pushdb.PushDB, dataCache *datacache.DataCache) *TaskRunner {
@@ -43,6 +44,16 @@ func NewTaskRunner(configPath, keywordPath string, pushDB *pushdb.PushDB, dataCa
 		PushDB:      pushDB,
 		DataCache:   dataCache,
 	}
+}
+
+// SetLogFilePath 设置日志文件路径
+func (tr *TaskRunner) SetLogFilePath(path string) {
+	tr.logFilePath = path
+}
+
+// GetLogFilePath 获取日志文件路径
+func (tr *TaskRunner) GetLogFilePath() string {
+	return tr.logFilePath
 }
 
 // StartScheduler 启动定时调度器

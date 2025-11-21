@@ -36,7 +36,7 @@ type TelegramMessage struct {
 
 func (n *TelegramNotifier) Send(ctx context.Context, items []*model.NewsItem) error {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("<b>TrendRadar 热点监控报告</b> (%s)\n", time.Now().Format("15:04")))
+	sb.WriteString(fmt.Sprintf("<b>TrendHub 热点监控报告</b> (%s)\n", time.Now().Format("15:04")))
 
 	currentSource := ""
 	for _, item := range items {

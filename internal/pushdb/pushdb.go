@@ -191,3 +191,32 @@ func (pdb *PushDB) GetLastPushTime() (time.Time, error) {
 	return lastTime, err
 }
 
+// ClearTodayRecords 清除今天的推送记录（用于测试）
+func (pdb *PushDB) ClearTodayRecords() (int, error) {
+	deleted := 0
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	
+	err := pdb.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(pushBucket))
+		c := b.Cursor()
+		
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var record PushRecord
+			if err := json.Unmarshal(v, &record); err != nil {
+				continue
+			}
+			
+			// 如果记录是今天的，删除
+			if record.Timestamp.After(today) || record.Timestamp.Equal(today) {
+				if err := c.Delete(); err != nil {
+					return err
+				}
+				deleted++
+			}
+		}
+		return nil
+	})
+	
+	return deleted, err
+}

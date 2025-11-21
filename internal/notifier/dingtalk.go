@@ -34,7 +34,7 @@ type DingtalkMessage struct {
 
 func (n *DingtalkNotifier) Send(ctx context.Context, items []*model.NewsItem) error {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("# TrendRadar 热点监控报告 (%s)\n\n", time.Now().Format("15:04")))
+	sb.WriteString(fmt.Sprintf("# TrendHub 热点监控报告 (%s)\n\n", time.Now().Format("15:04")))
 
 	currentSource := ""
 	for _, item := range items {
@@ -52,7 +52,7 @@ func (n *DingtalkNotifier) Send(ctx context.Context, items []*model.NewsItem) er
 	msg := DingtalkMessage{
 		MsgType: "markdown",
 	}
-	msg.Markdown.Title = "TrendRadar 热点监控"
+	msg.Markdown.Title = "TrendHub 热点监控"
 	msg.Markdown.Text = sb.String()
 
 	data, err := json.Marshal(msg)

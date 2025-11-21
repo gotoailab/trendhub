@@ -5,10 +5,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
+	"github.com/gotoailab/trendhub/internal/logger"
 	"github.com/gotoailab/trendhub/internal/model"
 	bolt "go.etcd.io/bbolt"
 )
@@ -345,7 +345,7 @@ func (dc *DataCache) GetRecentCrawlHistory(days int) ([]map[string]interface{}, 
 
 			var record CrawlHistoryRecord
 			if err := json.Unmarshal(v, &record); err != nil {
-				log.Printf("Error unmarshalling history %s: %v", string(k), err)
+				logger.Errorf("Error unmarshalling history %s: %v", string(k), err)
 				continue
 			}
 

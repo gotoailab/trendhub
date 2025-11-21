@@ -501,7 +501,7 @@
                              @mouseleave="showSettingsDropdown = false">
                             <button 
                                 class="tab-item" 
-                                :class="{active: currentTab === 'config' || currentTab === 'platforms' || currentTab === 'keywords'}">                                
+                                :class="{active: currentTab === 'config' || currentTab === 'platforms' || currentTab === 'keywords' || currentTab === 'logs'}">                                
                                 功能设置
                             </button>
                             <!-- 下拉菜单 -->
@@ -545,6 +545,18 @@
                                         </path>
                                     </svg>
                                     关键词配置
+                                </button>
+                                <button 
+                                    class="dropdown-item" 
+                                    :class="{active: currentTab === 'logs'}"
+                                    @click="currentTab = 'logs'; fetchLogs()">
+                                    <svg style="display: inline-block; width: 1rem; height: 1rem; margin-right: 0.5rem; vertical-align: middle;"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                        </path>
+                                    </svg>
+                                    日志查看
                                 </button>
                     </div>
                             </div>
@@ -1360,12 +1372,20 @@
                             <h2 :style="{fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)'}">推送记录</h2>
                             <p :style="{fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}">查看历史推送记录和执行状态</p>
                         </div>
-                        <button @click="fetchPushRecords" class="btn btn-sm btn-secondary">
-                            <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                            </svg>
-                            刷新
-                        </button>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button @click="clearTodayRecords" class="btn btn-sm" style="background: #f59e0b; color: white;">
+                                <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                清除今日记录
+                            </button>
+                            <button @click="fetchPushRecords" class="btn btn-sm btn-secondary">
+                                <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                刷新
+                            </button>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div v-if="pushRecords.length > 0" style="overflow-x: auto;">
@@ -1426,6 +1446,58 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                             </svg>
                             <p>暂无推送记录</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 日志查看 -->
+            <div v-show="currentTab === 'logs'">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 :style="{fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-primary)'}">系统日志</h2>
+                            <p :style="{fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.25rem'}">查看系统运行日志</p>
+                        </div>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button @click="fetchLogs" class="btn btn-sm btn-secondary">
+                                <svg style="width: 1rem; height: 1rem; margin-right: 0.5rem;" :class="{'animate-spin': logsLoading}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                刷新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body" style="padding: 0;">
+                        <div v-if="logsLoading" style="padding: 3rem; text-align: center;">
+                            <svg class="animate-spin" style="width: 3rem; height: 3rem; margin: 0 auto; color: #667eea;" fill="none" viewBox="0 0 24 24">
+                                <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <p style="margin-top: 1rem; color: var(--text-secondary);">加载中...</p>
+                        </div>
+                        
+                        <div v-else-if="logsData && logsData.content">
+                            <div style="padding: 1rem; background: var(--bg-card); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                                    <span>日志文件：{{ logsData.path }}</span>
+                                    <span v-if="logsData.modified_time" style="margin-left: 1.5rem;">
+                                        最后更新：{{ formatLogTime(logsData.modified_time) }}
+                                    </span>
+                                </div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                                    大小：{{ formatFileSize(logsData.size) }}
+                                </div>
+                            </div>
+                            <div style="padding: 1.5rem; background: #1e1e1e; color: #d4d4d4; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace; font-size: 0.875rem; line-height: 1.6; max-height: 600px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;">{{ logsData.content }}</div>
+                        </div>
+                        
+                        <div v-else class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <p>暂无日志内容</p>
                         </div>
                     </div>
                 </div>
@@ -1567,6 +1639,10 @@
                 const pushRecordTotal = ref(0)
                 const pushRecordLimit = ref(20)
                 const pushRecordOffset = ref(0)
+
+                // 日志相关
+                const logsData = ref(null)
+                const logsLoading = ref(false)
 
                 // Toast
                 const toast = ref({ show: false, message: '', type: 'success' })
@@ -2016,6 +2092,28 @@
                     }
                 }
 
+                const clearTodayRecords = async () => {
+                    if (!confirm('确定要清除今天的推送记录吗？这将允许再次测试推送。')) {
+                        return
+                    }
+                    try {
+                        const res = await fetch('/api/push-records/clear-today', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        })
+                        const data = await res.json()
+                        if (data.success) {
+                            showToast(data.message, 'success')
+                            fetchPushRecords()
+                        } else {
+                            showToast('清除失败', 'error')
+                        }
+                    } catch (e) {
+                        console.error('清除记录失败:', e)
+                        showToast('清除记录失败', 'error')
+                    }
+                }
+
                 const prevPushRecordsPage = () => {
                     if (pushRecordOffset.value > 0) {
                         pushRecordOffset.value = Math.max(0, pushRecordOffset.value - pushRecordLimit.value)
@@ -2028,6 +2126,45 @@
                         pushRecordOffset.value += pushRecordLimit.value
                         fetchPushRecords()
                     }
+                }
+
+                // 日志相关方法
+                const fetchLogs = async () => {
+                    logsLoading.value = true
+                    try {
+                        const res = await fetch('/api/logs')
+                        const data = await res.json()
+                        logsData.value = data
+                    } catch (e) {
+                        console.error('获取日志失败:', e)
+                        showToast('获取日志失败', 'error')
+                    } finally {
+                        logsLoading.value = false
+                    }
+                }
+
+                const formatLogTime = (timeStr) => {
+                    try {
+                        const date = new Date(timeStr)
+                        return date.toLocaleString('zh-CN', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit'
+                        })
+                    } catch (e) {
+                        return timeStr
+                    }
+                }
+
+                const formatFileSize = (bytes) => {
+                    if (bytes === 0) return '0 B'
+                    const k = 1024
+                    const sizes = ['B', 'KB', 'MB', 'GB']
+                    const i = Math.floor(Math.log(bytes) / Math.log(k))
+                    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
                 }
 
                 onMounted(() => {
@@ -2053,10 +2190,12 @@
                     addKeywordGroup, removeKeywordGroup, addWord, removeWord,
                     addPlatform, removePlatform,
                     pushRecords, pushRecordTotal, pushRecordLimit, pushRecordOffset,
+                    logsData, logsLoading,
                     recentHistories, selectedDate, historyDetail, availableDates,
                     saveConfig, saveKeywords,
                     formatTime, formatDateTime, formatDuration,
-                    fetchPushRecords, prevPushRecordsPage, nextPushRecordsPage,
+                    fetchPushRecords, clearTodayRecords, prevPushRecordsPage, nextPushRecordsPage,
+                    fetchLogs, formatLogTime, formatFileSize,
                     fetchRecentHistory, fetchHistoryDetail, getPlatformName, isToday,
                     showToast, showBackToTop, scrollToTop, showSettingsDropdown,
                     versionUpdate, closeVersionUpdate, showKeywordRuleModal,

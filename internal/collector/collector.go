@@ -2,13 +2,13 @@ package collector
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/gotoailab/trendhub/config"
 	"github.com/gotoailab/trendhub/internal/crawler"
 	"github.com/gotoailab/trendhub/internal/datacache"
+	"github.com/gotoailab/trendhub/internal/logger"
 )
 
 // DailyCollector 当日汇总数据收集器
@@ -46,7 +46,7 @@ func (dc *DailyCollector) Start(ctx context.Context) {
 	defer dc.mu.Unlock()
 
 	if dc.isRunning {
-		log.Println("Daily collector is already running")
+		logger.Info("Daily collector is already running")
 		return
 	}
 
@@ -54,7 +54,7 @@ func (dc *DailyCollector) Start(ctx context.Context) {
 	dc.isRunning = true
 	dc.stopChan = make(chan struct{})
 
-	log.Printf("Daily collector started, collecting data every %v", dc.interval)
+	logger.Infof("Daily collector started, collecting data every %v", dc.interval)
 
 	go func() {
 		// 立即执行一次
@@ -88,7 +88,7 @@ func (dc *DailyCollector) Stop() {
 
 	close(dc.stopChan)
 	dc.isRunning = false
-	log.Println("Daily collector stopped")
+	logger.Info("Daily collector stopped")
 }
 
 // ReloadConfig 重新加载配置
@@ -96,7 +96,7 @@ func (dc *DailyCollector) ReloadConfig(newCfg *config.Config) error {
 	dc.mu.Lock()
 	defer dc.mu.Unlock()
 
-	log.Println("Reloading daily collector configuration...")
+	logger.Info("Reloading daily collector configuration...")
 
 	// 计算新的间隔时间
 	newInterval := time.Duration(newCfg.Crawler.RequestInterval) * time.Millisecond
@@ -112,7 +112,7 @@ func (dc *DailyCollector) ReloadConfig(newCfg *config.Config) error {
 	configChanged := oldInterval != newInterval
 
 	if oldMode != newCfg.Report.Mode {
-		log.Printf("Report mode changed: %s -> %s", oldMode, newCfg.Report.Mode)
+		logger.Infof("Report mode changed: %s -> %s", oldMode, newCfg.Report.Mode)
 		configChanged = true
 	}
 
@@ -122,15 +122,15 @@ func (dc *DailyCollector) ReloadConfig(newCfg *config.Config) error {
 	dc.crawler = crawler.NewNewsNowCrawler(newCfg)
 
 	if !configChanged {
-		log.Println("Daily collector configuration unchanged")
+		logger.Info("Daily collector configuration unchanged")
 		return nil
 	}
 
-	log.Printf("Daily collector configuration changed (interval: %v -> %v)", oldInterval, newInterval)
+	logger.Infof("Daily collector configuration changed (interval: %v -> %v)", oldInterval, newInterval)
 
 	// 如果正在运行，需要重启
 	if dc.isRunning {
-		log.Println("Restarting daily collector with new configuration...")
+		logger.Info("Restarting daily collector with new configuration...")
 		
 		// 停止当前收集器
 		close(dc.stopChan)
@@ -160,9 +160,9 @@ func (dc *DailyCollector) ReloadConfig(newCfg *config.Config) error {
 				}
 			}()
 
-			log.Println("Daily collector restarted successfully")
+			logger.Info("Daily collector restarted successfully")
 		} else {
-			log.Println("Daily collector stopped (mode is not daily)")
+			logger.Info("Daily collector stopped (mode is not daily)")
 		}
 	}
 
@@ -171,7 +171,7 @@ func (dc *DailyCollector) ReloadConfig(newCfg *config.Config) error {
 
 // collect 执行一次数据收集
 func (dc *DailyCollector) collect(ctx context.Context) {
-	log.Println("Collecting data for daily aggregation...")
+	logger.Info("Collecting data for daily aggregation...")
 
 	// 创建超时上下文
 	collectCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
@@ -180,13 +180,13 @@ func (dc *DailyCollector) collect(ctx context.Context) {
 	// 爬取数据
 	data, err := dc.crawler.Run(collectCtx)
 	if err != nil {
-		log.Printf("Failed to collect data: %v", err)
+		logger.Infof("Failed to collect data: %v", err)
 		return
 	}
 
 	// 保存到历史记录（覆盖今天的记录，保持最新）
 	if err := dc.cache.SaveCrawlHistory(data); err != nil {
-		log.Printf("Warning: Failed to save crawl history: %v", err)
+		logger.Infof("Warning: Failed to save crawl history: %v", err)
 	}
 
 	// 添加到缓存（自动去重）
@@ -197,7 +197,7 @@ func (dc *DailyCollector) collect(ctx context.Context) {
 	}
 
 	cacheCount := dc.cache.GetDailyCacheCount()
-	log.Printf("Collected data: added %d new items, total cached: %d items", totalAdded, cacheCount)
+	logger.Infof("Collected data: added %d new items, total cached: %d items", totalAdded, cacheCount)
 }
 
 // IsRunning 检查是否正在运行

@@ -4,12 +4,12 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/gotoailab/trendhub/internal/datacache"
+	"github.com/gotoailab/trendhub/internal/logger"
 	"github.com/gotoailab/trendhub/internal/pushdb"
 	"github.com/gotoailab/trendhub/internal/version"
 	"github.com/gotoailab/trendhub/web"
@@ -22,6 +22,7 @@ func main() {
 	webAddr := flag.String("addr", ":8080", "Web server address")
 	pushDBPath := flag.String("pushdb", "data/push_records.db", "Path to push records database")
 	cacheDBPath := flag.String("cachedb", "data/data_cache.db", "Path to data cache database")
+	logFilePath := flag.String("logfile", "logs/trendhub.log", "Path to log file")
 	showVersion := flag.Bool("version", false, "Show version information")
 	flag.Parse()
 
@@ -35,21 +36,30 @@ func main() {
 		os.Exit(0)
 	}
 
+	// 初始化全局 logger
+	if err := logger.Init(*logFilePath); err != nil {
+		fmt.Printf("Warning: Failed to initialize logger: %v\n", err)
+	}
+	defer logger.Close()
+
+	logger.Info("TrendHub starting...")
+
 	// 初始化推送记录数据库
 	pushDB, err := pushdb.NewPushDB(*pushDBPath)
 	if err != nil {
-		log.Fatalf("Failed to initialize push database: %v", err)
+		logger.Fatalf("Failed to initialize push database: %v", err)
 	}
 	defer pushDB.Close()
 
 	// 初始化数据缓存数据库
 	dataCache, err := datacache.NewDataCache(*cacheDBPath)
 	if err != nil {
-		log.Fatalf("Failed to initialize data cache: %v", err)
+		logger.Fatalf("Failed to initialize data cache: %v", err)
 	}
 	defer dataCache.Close()
 
 	runner := web.NewTaskRunner(*configPath, *keywordPath, pushDB, dataCache)
+	runner.SetLogFilePath(*logFilePath)
 
 	if *webMode {
 		// Web 模式：启动 Web 服务器和定时调度器
@@ -58,7 +68,7 @@ func main() {
 
 		// 启动定时调度器
 		if err := runner.StartScheduler(ctx); err != nil {
-			log.Printf("Warning: Failed to start scheduler: %v", err)
+			logger.Errorf("Warning: Failed to start scheduler: %v", err)
 		}
 
 		// 优雅关闭
@@ -67,19 +77,20 @@ func main() {
 
 		go func() {
 			<-sigChan
-			log.Println("Shutting down...")
+			logger.Info("Shutting down...")
 			runner.StopScheduler()
 			cancel()
 			os.Exit(0)
 		}()
 
 		server := web.NewServer(runner)
-		log.Fatal(server.Run(*webAddr))
+		logger.Infof("Web server starting on %s", *webAddr)
+		logger.Fatal(server.Run(*webAddr))
 	} else {
 		// 命令行模式：直接执行任务
 		runner.ExtraWriter = os.Stdout
 		if _, err := runner.Run(); err != nil {
-			log.Fatal(err)
+			logger.Fatal(err)
 		}
 	}
 }

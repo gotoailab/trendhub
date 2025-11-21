@@ -3,11 +3,11 @@ package scheduler
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/gotoailab/trendhub/config"
+	"github.com/gotoailab/trendhub/internal/logger"
 	"github.com/gotoailab/trendhub/internal/pushdb"
 )
 
@@ -42,12 +42,12 @@ func (s *Scheduler) Start(ctx context.Context) error {
 	defer s.mu.Unlock()
 
 	if s.isRunning {
-		log.Println("Scheduler is already running")
+		logger.Info("Scheduler is already running")
 		return nil
 	}
 
 	if !s.cfg.PushWindow.Enabled {
-		log.Println("Push window is disabled, scheduler will not start")
+		logger.Info("Push window is disabled, scheduler will not start")
 		return nil
 	}
 
@@ -55,7 +55,7 @@ func (s *Scheduler) Start(ctx context.Context) error {
 	s.isRunning = true
 	s.stopChan = make(chan struct{})
 	
-	log.Printf("Scheduler started with time window: %s - %s\n", 
+	logger.Infof("Scheduler started with time window: %s - %s\n", 
 		s.cfg.PushWindow.TimeRange.Start, 
 		s.cfg.PushWindow.TimeRange.End)
 
@@ -98,7 +98,7 @@ func (s *Scheduler) Stop() {
 	
 	close(s.stopChan)
 	s.isRunning = false
-	log.Println("Scheduler stopped")
+	logger.Info("Scheduler stopped")
 }
 
 // ReloadConfig 重新加载配置
@@ -106,7 +106,7 @@ func (s *Scheduler) ReloadConfig(newCfg *config.NotificationConfig) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	log.Println("Reloading scheduler configuration...")
+	logger.Info("Reloading scheduler configuration...")
 
 	// 保存旧配置
 	oldEnabled := s.cfg.PushWindow.Enabled
@@ -124,18 +124,18 @@ func (s *Scheduler) ReloadConfig(newCfg *config.NotificationConfig) error {
 		oldOncePerDay != newCfg.PushWindow.OncePerDay
 
 	if !configChanged {
-		log.Println("Scheduler configuration unchanged, no restart needed")
+		logger.Info("Scheduler configuration unchanged, no restart needed")
 		return nil
 	}
 
-	log.Printf("Scheduler configuration changed (enabled: %v -> %v, time: %s-%s -> %s-%s)",
+	logger.Infof("Scheduler configuration changed (enabled: %v -> %v, time: %s-%s -> %s-%s)",
 		oldEnabled, newCfg.PushWindow.Enabled,
 		oldStart, oldEnd,
 		newCfg.PushWindow.TimeRange.Start, newCfg.PushWindow.TimeRange.End)
 
 	// 如果正在运行，需要重启
 	if s.isRunning {
-		log.Println("Restarting scheduler with new configuration...")
+		logger.Info("Restarting scheduler with new configuration...")
 		
 		// 停止当前调度器（不加锁，因为已经加锁了）
 		if s.ticker != nil {
@@ -167,14 +167,14 @@ func (s *Scheduler) ReloadConfig(newCfg *config.NotificationConfig) error {
 				}
 			}()
 
-			log.Println("Scheduler restarted successfully")
+			logger.Info("Scheduler restarted successfully")
 		} else {
-			log.Println("Scheduler stopped (push window disabled)")
+			logger.Info("Scheduler stopped (push window disabled)")
 		}
 	} else {
 		// 如果之前没运行，但现在启用了，启动调度器
 		if newCfg.PushWindow.Enabled && s.ctx != nil {
-			log.Println("Starting scheduler (push window enabled)...")
+			logger.Info("Starting scheduler (push window enabled)...")
 			s.stopChan = make(chan struct{})
 			s.isRunning = true
 			s.ticker = time.NewTicker(1 * time.Minute)
@@ -195,7 +195,7 @@ func (s *Scheduler) ReloadConfig(newCfg *config.NotificationConfig) error {
 				}
 			}()
 
-			log.Println("Scheduler started successfully")
+			logger.Info("Scheduler started successfully")
 		}
 	}
 
@@ -224,13 +224,13 @@ func (s *Scheduler) checkAndRun() {
 		if err == nil && !lastPushTime.IsZero() {
 			// 检查最后一次推送是否是今天
 			if isSameDay(lastPushTime, now) {
-				log.Println("Already pushed today, skipping...")
+				logger.Info("Already pushed today, skipping...")
 				return
 			}
 		}
 	}
 
-	log.Println("Time window matched, executing task...")
+	logger.Info("Time window matched, executing task...")
 	s.executeTask()
 }
 
@@ -238,13 +238,13 @@ func (s *Scheduler) checkAndRun() {
 func (s *Scheduler) isInTimeWindow(now time.Time) bool {
 	startTime, err := parseTimeOfDay(s.cfg.PushWindow.TimeRange.Start)
 	if err != nil {
-		log.Printf("Failed to parse start time: %v\n", err)
+		logger.Infof("Failed to parse start time: %v\n", err)
 		return false
 	}
 
 	endTime, err := parseTimeOfDay(s.cfg.PushWindow.TimeRange.End)
 	if err != nil {
-		log.Printf("Failed to parse end time: %v\n", err)
+		logger.Infof("Failed to parse end time: %v\n", err)
 		return false
 	}
 
@@ -280,25 +280,25 @@ func (s *Scheduler) executeTask() {
 		record.Status = "failed"
 		record.ErrorMsg = err.Error()
 		record.FailedNum = 1
-		log.Printf("Task failed: %v\n", err)
+		logger.Infof("Task failed: %v\n", err)
 	} else {
 		record.Status = "success"
 		record.SuccessNum = 1
-		log.Printf("Task completed successfully, pushed %d items\n", itemCount)
+		logger.Infof("Task completed successfully, pushed %d items\n", itemCount)
 	}
 
 	// 保存记录
 	if err := s.pushDB.SaveRecord(record); err != nil {
-		log.Printf("Failed to save push record: %v\n", err)
+		logger.Infof("Failed to save push record: %v\n", err)
 	}
 
 	// 清理旧记录
 	if s.cfg.PushWindow.PushRecordRetentionDays > 0 {
 		deleted, err := s.pushDB.DeleteOldRecords(s.cfg.PushWindow.PushRecordRetentionDays)
 		if err != nil {
-			log.Printf("Failed to delete old records: %v\n", err)
+			logger.Infof("Failed to delete old records: %v\n", err)
 		} else if deleted > 0 {
-			log.Printf("Deleted %d old push records\n", deleted)
+			logger.Infof("Deleted %d old push records\n", deleted)
 		}
 	}
 }

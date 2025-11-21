@@ -35,7 +35,7 @@ type WPSMessage struct {
 
 func (n *WPSNotifier) Send(ctx context.Context, items []*model.NewsItem) error {
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("TrendRadar 热点监控报告 (%s)\n\n", time.Now().Format("2006-01-02 15:04")))
+	sb.WriteString(fmt.Sprintf("TrendHub 热点监控报告 (%s)\n\n", time.Now().Format("2006-01-02 15:04")))
 
 	// 简单的文本格式化
 	currentSource := ""
