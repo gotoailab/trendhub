@@ -40,30 +40,44 @@ notification:
 platforms:
     - id: toutiao
       name: 今日头条
+      weight: 0.9  # 平台权重：0-1，默认1.0
     - id: baidu
       name: 百度热搜
+      weight: 0.8
     - id: wallstreetcn-hot
       name: 华尔街见闻
+      weight: 1.0  # 重点关注的平台
     - id: thepaper
       name: 澎湃新闻
+      weight: 1.0
     - id: bilibili-hot-search
       name: bilibili 热搜
+      weight: 0.7
     - id: cls-hot
       name: 财联社热门
+      weight: 1.0
     - id: ifeng
       name: 凤凰网
+      weight: 0.8
     - id: tieba
       name: 贴吧
+      weight: 0.6
     - id: weibo
       name: 微博
+      weight: 0.9
     - id: douyin
       name: 抖音
+      weight: 0.7
     - id: zhihu
       name: 知乎
+      weight: 1.0  # 重点关注的平台
 report:
     mode: daily
     rank_threshold: 5
 weight:
-    frequency_weight: 0.3
-    hotness_weight: 0.1
-    rank_weight: 0.6
+    rank_weight: 0.3       # 原始排名权重（降低以减少对平台排名的依赖）
+    frequency_weight: 0.2  # 出现频次权重
+    hotness_weight: 0.0    # 热度值权重（暂无数据）
+    keyword_weight: 0.4    # 关键词匹配权重（新增，重要！）
+    platform_weight: 1.0   # 平台权重影响系数（1.0=完全应用，0.0=不应用）
+    freshness_weight: 0.1  # 时效性权重（新内容加分）

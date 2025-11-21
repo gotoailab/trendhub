@@ -29,7 +29,7 @@ func main() {
 	// 2. 初始化模块
 	c := crawler.NewNewsNowCrawler(cfg.Config)
 	f := filter.NewKeywordFilter(cfg.KeywordGroups, cfg.GlobalFilters)
-	r := rank.NewWeightedRanker(cfg.Config.Weight)
+	r := rank.NewWeightedRanker(cfg.Config.Weight, cfg.Config.Platforms)
 	n := notifier.NewNotificationManager(cfg.Config)
 
 	// 3. 执行任务 (这里演示一次性执行，如果是守护进程可以加 for loop 或 cron)

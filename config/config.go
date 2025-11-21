@@ -82,6 +82,9 @@ type WeightConfig struct {
 	RankWeight      float64 `yaml:"rank_weight" json:"rank_weight"`
 	FrequencyWeight float64 `yaml:"frequency_weight" json:"frequency_weight"`
 	HotnessWeight   float64 `yaml:"hotness_weight" json:"hotness_weight"`
+	KeywordWeight   float64 `yaml:"keyword_weight" json:"keyword_weight"`     // 关键词匹配权重
+	PlatformWeight  float64 `yaml:"platform_weight" json:"platform_weight"`   // 平台权重影响系数
+	FreshnessWeight float64 `yaml:"freshness_weight" json:"freshness_weight"` // 时效性权重
 }
 
 // Config 总配置结构
@@ -100,6 +103,7 @@ type KeywordGroup struct {
 	Normal   []string
 	Filters  []string // 该组特定的过滤词（虽然原始实现是全局的，但这里保留扩展性）
 	GroupKey string
+	Priority int // 优先级：1-10，默认5，越高越重要
 }
 
 // GlobalConfig 全局配置管理器
@@ -178,6 +182,8 @@ func loadKeywords(path string) ([]KeywordGroup, []string, error) {
 		lines := strings.Split(rawGroup, "\n")
 		var required []string
 		var normal []string
+		priority := 5 // 默认优先级
+
 		// 这里 Python 原版逻辑：!开头的是过滤词。
 		// 原版逻辑里，filter_words 是全局收集的，group里也会标记。
 		// 我们这里遵循原版逻辑：!开头的词会被加入到该组的过滤列表，同时也会被加入到返回值里的 globalFilters (如果是全局行为)
@@ -188,6 +194,16 @@ func loadKeywords(path string) ([]KeywordGroup, []string, error) {
 			if line == "" {
 				continue
 			}
+
+			// 检查是否是优先级标记：[priority:10] 或 [priority:10]
+			if strings.HasPrefix(line, "[priority:") && strings.HasSuffix(line, "]") {
+				priorityStr := strings.TrimSuffix(strings.TrimPrefix(line, "[priority:"), "]")
+				if p, err := strconv.Atoi(priorityStr); err == nil && p >= 1 && p <= 10 {
+					priority = p
+				}
+				continue
+			}
+
 			if strings.HasPrefix(line, "!") {
 				globalFilters = append(globalFilters, strings.TrimPrefix(line, "!"))
 			} else if strings.HasPrefix(line, "+") {
@@ -209,6 +225,7 @@ func loadKeywords(path string) ([]KeywordGroup, []string, error) {
 				Required: required,
 				Normal:   normal,
 				GroupKey: key,
+				Priority: priority,
 			})
 		}
 	}

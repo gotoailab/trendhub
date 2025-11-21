@@ -639,13 +639,29 @@
                     </a>
                     <span v-else :style="{color: 'var(--text-primary)', fontWeight: '500', fontSize: '1rem', flex: '1'}">{{ item.title }}</span>
                     </div>
-                <div :style="{display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-secondary)'}">
+                <div :style="{display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-secondary)', flexWrap: 'wrap'}">
                     <span style="background: #e0e7ff; color: #4338ca; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-weight: 500;">
                         {{ getPlatformName(item.source_id) }}
                     </span>
                     <span v-if="item.ranks && item.ranks.length > 0">
                         原榜单 #{{ item.ranks[0] }}
                     </span>
+                    <span v-if="item.match_score" style="background: #d1fae5; color: #065f46; padding: 0.125rem 0.5rem; border-radius: 0.25rem; font-weight: 600;">
+                        ⭐ 匹配分: {{ item.match_score.toFixed(1) }}
+                    </span>
+                    <div v-if="item.matched_keywords && item.matched_keywords.length > 0" style="display: flex; gap: 0.375rem; flex-wrap: wrap;">
+                        <span v-for="(kw, kidx) in item.matched_keywords" :key="kidx" 
+                              :style="{
+                                  background: kw.startsWith('+') ? '#fef3c7' : '#dbeafe',
+                                  color: kw.startsWith('+') ? '#78350f' : '#1e40af',
+                                  padding: '0.125rem 0.375rem',
+                                  borderRadius: '0.25rem',
+                                  fontSize: '0.625rem',
+                                  fontWeight: '500'
+                              }">
+                            {{ kw }}
+                        </span>
+                    </div>
                 </div>
                     </div>
         </div>
@@ -1001,41 +1017,62 @@
                                                                     d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3">
                                                                 </path>
                                                             </svg>
-                                                            权重算法
+                                                            智能排序算法
                                                         </div>
                                                         <div class="form-grid">
                                                             <div class="col-span-12">
                                                                 <div
-                                                                    style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
-                                                                    <div style="display: flex; align-items: center; color: #92400e;">
+                                                                    style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                                                                    <div style="display: flex; align-items: center; color: #1e40af;">
                                                                         <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem; flex-shrink: 0;" fill="none"
                                                                             stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                                                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                                                         </svg>
-                                                                        <div style="font-size: 0.875rem;">三个权重值之和建议为 1.0，当前总和：<strong>{{ weightSum.toFixed(2) }}</strong>
-                                                                            <span v-if="weightSum !== 1.0" style="color: #dc2626;">(建议调整)</span></div>
+                                                                        <div style="font-size: 0.875rem;">
+                                                                            所有权重值之和建议为 1.0，当前总和：<strong>{{ weightSum.toFixed(2) }}</strong>
+                                                                            <span v-if="Math.abs(weightSum - 1.0) > 0.05" style="color: #dc2626; margin-left: 0.5rem;">(建议调整)</span>
+                                                                            <span v-else style="color: #059669; margin-left: 0.5rem;">✓</span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div class="col-span-4">
+                                                            <div class="col-span-6">
                                                                 <label class="form-label">排名权重</label>
                                                                 <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.rank_weight"
                                                                     class="form-control">
-                                                                <div class="help-text">排名越靠前权重越高</div>
+                                                                <div class="help-text">原始平台排名的影响权重</div>
                                                             </div>
-                                                            <div class="col-span-4">
+                                                            <div class="col-span-6">
                                                                 <label class="form-label">频次权重</label>
                                                                 <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.frequency_weight"
                                                                     class="form-control">
-                                                                <div class="help-text">出现频次越高权重越高</div>
+                                                                <div class="help-text">重复出现次数的影响权重</div>
                                                             </div>
-                                    <div class="col-span-4">
-                                        <label class="form-label">热度权重</label>
-                                        <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.hotness_weight"
-                                            class="form-control">
-                                        <div class="help-text">热度数值越高权重越高</div>
-                                    </div>
+                                                            <div class="col-span-6">
+                                                                <label class="form-label">关键词权重 <span style="color: #059669;">⭐ 新增</span></label>
+                                                                <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.keyword_weight"
+                                                                    class="form-control">
+                                                                <div class="help-text">关键词匹配度的影响权重（重要！）</div>
+                                                            </div>
+                                                            <div class="col-span-6">
+                                                                <label class="form-label">时效性权重 <span style="color: #059669;">⭐ 新增</span></label>
+                                                                <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.freshness_weight"
+                                                                    class="form-control">
+                                                                <div class="help-text">新出现内容的影响权重</div>
+                                                            </div>
+                                                            <div class="col-span-6">
+                                                                <label class="form-label">热度权重</label>
+                                                                <input type="number" step="0.1" min="0" max="1" v-model.number="configObj.weight.hotness_weight"
+                                                                    class="form-control">
+                                                                <div class="help-text">热度数值的影响权重（暂无数据）</div>
+                                                            </div>
+                                                            <div class="col-span-6">
+                                                                <label class="form-label">平台权重系数 <span style="color: #059669;">⭐ 新增</span></label>
+                                                                <input type="number" step="0.1" min="0" max="2" v-model.number="configObj.weight.platform_weight"
+                                                                    class="form-control">
+                                                                <div class="help-text">平台权重的影响系数（1.0=完全应用）</div>
+                                                            </div>
                                     </div>
             </div>
 
@@ -1099,6 +1136,17 @@
                                                 style="padding: 0.5rem 0.75rem; font-size: 0.8125rem;">
                                             <input type="text" v-model="platform.id" class="form-control" placeholder="平台ID"
                                                 style="padding: 0.5rem 0.75rem; font-size: 0.8125rem; font-family: monospace;">
+                                            <div>
+                                                <label :style="{fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '0.25rem', display: 'block'}">
+                                                    平台权重 <span style="color: #059669;">⭐</span>
+                                                </label>
+                                                <input type="number" v-model.number="platform.weight" step="0.1" min="0" max="2" 
+                                                    class="form-control" placeholder="1.0"
+                                                    style="padding: 0.5rem 0.75rem; font-size: 0.8125rem;">
+                                                <div :style="{fontSize: '0.625rem', color: 'var(--text-muted)', marginTop: '0.25rem'}">
+                                                    默认1.0，优质平台可设置>1.0，娱乐平台可设置<1.0
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1158,7 +1206,27 @@
                             <div v-for="(group, idx) in keywordGroups" :key="idx"
                                 :style="{background: 'var(--bg-card)', border: '2px solid var(--border-color)', borderRadius: '0.75rem', padding: '1.5rem', marginBottom: '1rem'}">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-                                    <h3 :style="{fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)'}">词组 {{ idx + 1 }}</h3>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <h3 :style="{fontSize: '1rem', fontWeight: '700', color: 'var(--text-primary)'}">词组 {{ idx + 1 }}</h3>
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <label :style="{fontSize: '0.8125rem', fontWeight: '600', color: 'var(--text-secondary)'}">
+                                                优先级 <span style="color: #059669;">⭐</span>
+                                            </label>
+                                            <select v-model.number="group.priority" 
+                                                :style="{padding: '0.25rem 0.5rem', fontSize: '0.75rem', borderRadius: '0.375rem', border: '1.5px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-input)'}">
+                                                <option :value="10">10 - 最高</option>
+                                                <option :value="9">9 - 很高</option>
+                                                <option :value="8">8 - 高</option>
+                                                <option :value="7">7 - 较高</option>
+                                                <option :value="6">6 - 中上</option>
+                                                <option :value="5">5 - 中等</option>
+                                                <option :value="4">4 - 中下</option>
+                                                <option :value="3">3 - 较低</option>
+                                                <option :value="2">2 - 低</option>
+                                                <option :value="1">1 - 最低</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <button @click="removeKeywordGroup(idx)" class="btn btn-sm btn-danger">
                                         <svg style="width: 0.875rem; height: 0.875rem; margin-right: 0.375rem;" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
@@ -1329,6 +1397,24 @@
                             </div>
                         </div>
 
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 1rem; display: flex; align-items: center;">
+                                <span style="display: inline-block; width: 0.5rem; height: 0.5rem; background: #059669; border-radius: 50%; margin-right: 0.75rem;"></span>
+                                优先级 <span style="color: #059669; margin-left: 0.25rem;">⭐ 新增</span>
+                            </h3>
+                            <p style="color: #6b7280; line-height: 1.6; margin-bottom: 0.75rem;">
+                                为每个关键词组设置优先级（1-10），优先级越高的关键词组，匹配到时的排序分数越高。
+                            </p>
+                            <div style="background: #f9fafb; border-left: 3px solid #059669; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.75rem;">
+                                <p style="margin: 0; font-size: 0.875rem; color: #374151;"><strong>示例：</strong></p>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem; color: #6b7280;">
+                                    优先级 10（最高）：AI、ChatGPT - 这些是你最想看的<br>
+                                    优先级 5（默认）：科技、互联网 - 一般关注的<br>
+                                    优先级 2（低）：娱乐、八卦 - 可选内容
+                                </p>
+                            </div>
+                        </div>
+
                         <div style="background: #eff6ff; border: 1px solid #3b82f6; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
                             <h4 style="font-size: 0.9375rem; font-weight: 600; color: #1e40af; margin: 0 0 0.75rem 0; display: flex; align-items: center;">
                                 <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1338,6 +1424,18 @@
                             </h4>
                             <p style="font-size: 0.875rem; color: #1e40af; line-height: 1.6; margin: 0;">
                                 一个关键词组内的规则是<strong>组合使用</strong>的：普通词任意匹配 <strong>AND</strong> 必须词全部包含 <strong>AND</strong> 过滤词全部排除。不同关键词组之间是<strong>OR</strong>关系，只要匹配任意一组即可。
+                            </p>
+                        </div>
+                        
+                        <div style="background: #d1fae5; border: 1px solid #059669; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                            <h4 style="font-size: 0.9375rem; font-weight: 600; color: #065f46; margin: 0 0 0.75rem 0; display: flex; align-items: center;">
+                                <svg style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                智能排序
+                            </h4>
+                            <p style="font-size: 0.875rem; color: #065f46; line-height: 1.6; margin: 0;">
+                                系统会根据<strong>关键词优先级</strong>、<strong>匹配的关键词数量</strong>、<strong>原始排名</strong>、<strong>出现频次</strong>等多个维度进行智能排序，确保你最想看的内容排在前面。
                             </p>
                         </div>
 
@@ -1353,6 +1451,8 @@
                                 <li>使用空行分隔不同的关键词组</li>
                                 <li>过滤词是<strong>全局生效</strong>的，会应用到所有关键词组</li>
                                 <li>建议使用具体的关键词，避免过于宽泛的词导致匹配过多</li>
+                                <li><span style="color: #059669;">⭐</span> 为重要的关键词组设置<strong>高优先级</strong>，可以让这些内容排在前面</li>
+                                <li><span style="color: #059669;">⭐</span> 配合<strong>平台权重</strong>使用，效果更佳（在平台管理中设置）</li>
                             </ul>
                         </div>
                     </div>
@@ -1772,7 +1872,8 @@
                 const weightSum = computed(() => {
                     if (!configObj.value || !configObj.value.weight) return 0
                     const w = configObj.value.weight
-                    return (w.rank_weight || 0) + (w.frequency_weight || 0) + (w.hotness_weight || 0)
+                    return (w.rank_weight || 0) + (w.frequency_weight || 0) + (w.hotness_weight || 0) + 
+                           (w.keyword_weight || 0) + (w.freshness_weight || 0)
                 })
 
                 const fetchConfig = async () => {
@@ -1784,6 +1885,28 @@
                         configObj.value = data.json
                     } else {
                             configObj.value = jsyaml.load(data.yaml)
+                        }
+                        
+                        // 为没有 weight 的平台添加默认值
+                        if (configObj.value && configObj.value.platforms) {
+                            configObj.value.platforms.forEach(platform => {
+                                if (platform.weight === undefined || platform.weight === null) {
+                                    platform.weight = 1.0
+                                }
+                            })
+                        }
+                        
+                        // 为没有新权重字段的配置添加默认值
+                        if (configObj.value && configObj.value.weight) {
+                            if (configObj.value.weight.keyword_weight === undefined) {
+                                configObj.value.weight.keyword_weight = 0.0
+                            }
+                            if (configObj.value.weight.freshness_weight === undefined) {
+                                configObj.value.weight.freshness_weight = 0.0
+                            }
+                            if (configObj.value.weight.platform_weight === undefined) {
+                                configObj.value.weight.platform_weight = 1.0
+                            }
                         }
                         } catch (e) {
                         console.error('获取配置失败:', e)
@@ -1812,14 +1935,25 @@
                     const rawGroups = text.split(/\n\s*\n/)
                     rawGroups.forEach(raw => {
                         if (!raw.trim()) return
-                        const group = { normal: [], required: [], filters: [] }
+                        const group = { normal: [], required: [], filters: [], priority: 5 }
                         const lines = raw.split('\n')
                         lines.forEach(line => {
                             line = line.trim()
                             if (!line) return
+                            // 解析优先级标记 [priority:X]
+                            if (line.match(/^\[priority:\d+\]$/)) {
+                                const match = line.match(/\[priority:(\d+)\]/)
+                                if (match) {
+                                    const priority = parseInt(match[1])
+                                    if (priority >= 1 && priority <= 10) {
+                                        group.priority = priority
+                                    }
+                                }
+                                return
+                            }
                             if (line.startsWith('!')) group.filters.push(line.substring(1))
                             else if (line.startsWith('+')) group.required.push(line.substring(1))
-                            else group.normal.push(line)
+                            else if (!line.startsWith('#')) group.normal.push(line) // 忽略注释行
                         })
                         if (group.normal.length > 0 || group.required.length > 0 || group.filters.length > 0) {
                         groups.push(group)
@@ -1831,6 +1965,10 @@
                 const stringifyKeywords = () => {
                     return keywordGroups.value.map(group => {
                         const lines = []
+                        // 如果有优先级且不是默认值5，则添加优先级标记
+                        if (group.priority && group.priority !== 5) {
+                            lines.push(`[priority:${group.priority}]`)
+                        }
                         group.normal.forEach(w => lines.push(w))
                         group.required.forEach(w => lines.push('+' + w))
                         group.filters.forEach(w => lines.push('!' + w))
@@ -1910,7 +2048,7 @@
                 }
 
                 const addKeywordGroup = () => {
-                    keywordGroups.value.push({ normal: [], required: [], filters: [] })
+                    keywordGroups.value.push({ normal: [], required: [], filters: [], priority: 5 })
                 }
 
                 const removeKeywordGroup = (idx) => {
@@ -1935,7 +2073,7 @@
                     if (!configObj.value.platforms) {
                         configObj.value.platforms = []
                     }
-                    configObj.value.platforms.push({ id: '', name: '' })
+                    configObj.value.platforms.push({ id: '', name: '', weight: 1.0 })
                 }
 
                 const removePlatform = (idx) => {

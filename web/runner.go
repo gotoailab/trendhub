@@ -203,7 +203,7 @@ func (tr *TaskRunner) Run() (string, error) {
 
 	// 2. 初始化模块
 	f := filter.NewKeywordFilter(cfg.KeywordGroups, cfg.GlobalFilters)
-	r := rank.NewWeightedRanker(cfg.Config.Weight)
+	r := rank.NewWeightedRanker(cfg.Config.Weight, cfg.Config.Platforms)
 	n := notifier.NewNotificationManager(cfg.Config)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -359,7 +359,7 @@ func (tr *TaskRunner) FilterAndRankData(rawData map[string][]*model.NewsItem) ([
 
 	// 初始化过滤器和排序器
 	f := filter.NewKeywordFilter(cfg.KeywordGroups, cfg.GlobalFilters)
-	r := rank.NewWeightedRanker(cfg.Config.Weight)
+	r := rank.NewWeightedRanker(cfg.Config.Weight, cfg.Config.Platforms)
 
 	// 过滤数据
 	filteredData, err := f.Filter(rawData)

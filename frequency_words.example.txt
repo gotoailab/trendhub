@@ -1,23 +1,44 @@
+# 关键词配置示例
+# 
+# 格式说明：
+# - 空行分隔不同的关键词组
+# - [priority:X] 设置该组优先级（1-10，默认5），数字越大越重要
+# - +开头为必须词（必须包含所有必须词）
+# - !开头为过滤词（包含该词的会被排除）
+# - 无前缀为普通词（至少匹配一个即可）
+#
+# 优先级示例：
+# [priority:10] - 最高优先级，你最想看的内容
+# [priority:5]  - 默认优先级
+# [priority:1]  - 最低优先级，不太感兴趣但也想看
+
+[priority:10]
 胖东来
 于东来
 
+[priority:10]
 DeepSeek
 梁文锋
 
+[priority:9]
 华为
 鸿蒙
 HarmonyOS
 任正非
 
+[priority:8]
 比亚迪
 王传福
 
+[priority:8]
 大疆
 DJI
 
+[priority:7]
 宇树
 王兴兴
 
+[priority:8]
 智元
 灵犀
 稚晖君
@@ -66,18 +87,22 @@ google
 gemini
 deepmind
 
+[priority:10]
 chatgpt
 openai
 sora
 
+[priority:10]
 claude
 Anthropic
 
+[priority:6]
 iphone
 ipad
 mac
 ios
 
+[priority:9]
 ai
 !gai
 人工智能
