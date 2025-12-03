@@ -34,7 +34,7 @@
 
 ---
 
-<img src="https://raw.githubusercontent.com/gotoailab/trendhub/refs/heads/master/docs/images/demo.png" width="800" alt="TrendHub Demo">
+<img src="https://raw.githubusercontent.com/gotoailab/trendhub/refs/heads/main/docs/images/demo.png" width="800" alt="TrendHub Demo">
 
 </div>
 
